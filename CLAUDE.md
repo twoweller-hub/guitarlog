@@ -1,12 +1,16 @@
 # ギター練習記録アプリ
 
 ## 概要
-ギター練習記録アプリ。HTMLファイル単体で動作し、Googleスプレッドシートにデータを蓄積する。
+ギター練習記録アプリ。HTMLファイル単体で動作し、Googleスプレッドシートにデータを蓄積する。PWA対応済み。
+
+## 公開URL
+- アプリ: `https://twoweller-hub.github.io/guitarlog/`
+- リポジトリ: GitHub Pages でホスティング（`guitarlog` リポジトリ）
 
 ## 使用環境
-- Galaxyスマートフォンのブラウザで使用（PWA対応にすること）
-- データはGoogleスプレッドシートに蓄積
-- MacからもGalaxyからも同じスプレッドシートを参照・手動編集する
+- Galaxy スマートフォン（PWA としてホーム画面にインストール済み）
+- Mac からもブラウザで利用可能
+- 両端末から同じ Google スプレッドシートを参照・手動編集する
 
 ## 操作フロー
 1. 曲名をプルダウンで選択
@@ -25,28 +29,23 @@
 | F列 | 通算回数 |
 
 ## 通算回数の仕様
-- F列はCOUNTIF数式で自動計算
-- 手動入力・アプリ入力どちらでも対応
-- 過去データを初期行として入れることで任意の回数からカウント開始できる
+- GAS が同じ曲名の F 列の最大値を検索し、+1 して記録する（MAX+1 方式）
+- COUNTIF 数式は使っていない
+- 過去データをインポートしても正しく引き続き累計できる
 
-## 曲名プリセット
-Linoleum / NOFX
-あなたに / MONGOL800
-An Idea For a Movie / Vandals
-New Life / Hi-STANDARD
-Let It Be / Beatles
-Kiss me again / Hi-STANDARD
-Lonely / Hi-STANDARD
-Smells Like Teen Spirit / Nirvana
-Race Problem / B-DASH
-小さな恋のうた / MONGOL800
-Sleep / Lagwagon
+## 曲リスト管理
+- 曲はスプレッドシートの「曲リスト」シートで一元管理
+- アプリの「曲管理」タブから追加・削除・並び替えが可能
+- Mac と Galaxy で曲リストが共有される（GAS 経由）
+- プリセット曲はなく、すべてユーザーが追加する
 
 ## 技術構成
-- フロントエンド：HTML単体ファイル
-- バックエンド：Google Apps Script（WebアプリとしてデプロイしたGAS）
-- データ保存先：Googleスプレッドシート
+- フロントエンド: `index.html`（HTML + CSS + JS、1ファイル完結）
+- バックエンド: Google Apps Script（`gas/code.gs`）
+- データ保存先: Google スプレッドシート
+- ライブラリ: SortableJS（CDN）
 
-## 参考ファイル
-服薬アプリ（HTML）を参考にすること。GalaxyでPWA的に動作させる仕組みも同様に実装すること。
-※服薬アプリのHTMLファイルパスをここに記載する
+## 重要な設定値
+- スプレッドシート ID: `12pZVt7aGA5NzBeRZN_wo6cDh4ryW7aTrGZfpOTeDpEk`
+- GAS URL: `index.html` 内の `GAS_URL` 定数に記載
+- Service Worker キャッシュバージョン: `sw.js` の `CACHE` 定数で管理
