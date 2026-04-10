@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ギター練習記録</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      background: #f2f4f7;
+      color: #1a1a2e;
+      min-height: 100vh;
+    }
+
+    /* ヘッダー */
+    header {
+      background: #2e7d32;
+      color: white;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    header h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+    header p {
+      font-size: 13px;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    /* メインコンテンツ */
+    main {
+      padding: 16px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    /* カード */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    /* セクションラベル */
+    .label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #888;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    /* プルダウン */
+    select {
+      width: 100%;
+      padding: 14px 16px;
+      font-size: 16px;
+      border: 1.5px solid #dde1e7;
+      border-radius: 8px;
+      background: white;
+      color: #1a1a2e;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      cursor: pointer;
+    }
+    select:disabled {
+      background-color: #f5f5f5;
+      color: #aaa;
+      cursor: not-allowed;
+    }
+
+    /* ボタン */
+    .btn {
+      width: 100%;
+      min-height: 56px;
+      border: none;
+      border-radius: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+      letter-spacing: 0.5px;
+    }
+    .btn:active { transform: scale(0.97); }
+
+    .btn-start {
+      background: #2e7d32;
+      color: white;
+    }
+    .btn-start:disabled {
+      background: #a5d6a7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-end {
+      background: #c62828;
+      color: white;
+    }
+    .btn-end:disabled {
+      background: #ef9a9a;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* 練習中エリア */
+    #practicing-area {
+      display: none;
+    }
+
+    .song-name {
+      font-size: 17px;
+      font-weight: 700;
+      color: #2e7d32;
+      margin-bottom: 8px;
+    }
+
+    .start-time-label {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .timer-display {
+      text-align: center;
+      padding: 16px 0;
+    }
+    .timer-label {
+      font-size: 13px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    .timer-value {
+      font-size: 48px;
+      font-weight: 300;
+      color: #1a1a2e;
+      letter-spacing: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ステータス表示 */
+    #status {
+      display: none;
+      border-radius: 10px;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 12px;
+    }
+    #status.success {
+      background: #e8f5e9;
+      color: #2e7d32;
+      border: 1.5px solid #a5d6a7;
+    }
+    #status.error {
+      background: #ffebee;
+      color: #c62828;
+      border: 1.5px solid #ef9a9a;
+    }
+    #status.sending {
+      background: #e3f2fd;
+      color: #1565c0;
+      border: 1.5px solid #90caf9;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎸 ギター練習記録</h1>
+  <p>練習したらスプレッドシートに自動保存</p>
+</header>
+
+<main>
+
+  <!-- ステータス表示 -->
+  <div id="status"></div>
+
+  <!-- 曲選択カード -->
+  <div class="card">
+    <div class="label">SONG</div>
+    <select id="song-select">
+      <option value="">曲を選択してください</option>
+      <option value="Linoleum / NOFX">Linoleum / NOFX</option>
+      <option value="あなたに / MONGOL800">あなたに / MONGOL800</option>
+      <option value="An Idea For a Movie / Vandals">An Idea For a Movie / Vandals</option>
+      <option value="New Life / Hi-STANDARD">New Life / Hi-STANDARD</option>
+      <option value="Let It Be / Beatles">Let It Be / Beatles</option>
+      <option value="Kiss me again / Hi-STANDARD">Kiss me again / Hi-STANDARD</option>
+      <option value="Lonely / Hi-STANDARD">Lonely / Hi-STANDARD</option>
+      <option value="Smells Like Teen Spirit / Nirvana">Smells Like Teen Spirit / Nirvana</option>
+      <option value="Race Problem / B-DASH">Race Problem / B-DASH</option>
+      <option value="小さな恋のうた / MONGOL800">小さな恋のうた / MONGOL800</option>
+      <option value="Sleep / Lagwagon">Sleep / Lagwagon</option>
+    </select>
+  </div>
+
+  <!-- 開始ボタンカード -->
+  <div class="card" id="start-card">
+    <button class="btn btn-start" id="btn-start" onclick="startPractice()">開始</button>
+  </div>
+
+  <!-- 練習中カード -->
+  <div class="card" id="practicing-area">
+    <div class="song-name" id="practicing-song"></div>
+    <div class="start-time-label" id="start-time-label"></div>
+    <div class="timer-display">
+      <div class="timer-label">経過時間</div>
+      <div class="timer-value" id="timer">00:00</div>
+    </div>
+    <button class="btn btn-end" id="btn-end" onclick="endPractice()">終了・保存</button>
+  </div>
+
+</main>
+
+<script>
+  // ============================================================
+  // 【設定】GASをデプロイしたらここのURLを書き換える
+  const GAS_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec';
+  // ============================================================
+
+  let startTime = null;
+  let timerInterval = null;
+
+  function startPractice() {
+    const song = document.getElementById('song-select').value;
+    if (!song) {
+      showStatus('曲を選択してください', 'error');
+      return;
+    }
+
+    startTime = new Date();
+    hideStatus();
+
+    // UI更新
+    document.getElementById('song-select').disabled = true;
+    document.getElementById('btn-start').disabled = true;
+    document.getElementById('start-card').style.display = 'none';
+
+    document.getElementById('practicing-song').textContent = song;
+    document.getElementById('start-time-label').textContent =
+      '開始: ' + formatTime(startTime);
+    document.getElementById('practicing-area').style.display = 'block';
+    document.getElementById('btn-end').disabled = false;
+
+    // タイマー開始
+    timerInterval = setInterval(updateTimer, 1000);
+  }
+
+  function endPractice() {
+    const endTime = new Date();
+    const song = document.getElementById('song-select').value;
+
+    // タイマー停止
+    clearInterval(timerInterval);
+    timerInterval = null;
+
+    // 終了ボタンを無効化（二重送信防止）
+    document.getElementById('btn-end').disabled = true;
+
+    const duration = Math.round((endTime - startTime) / 60000); // 分（整数）
+
+    // 送信データ
+    const payload = {
+      date:      formatDate(startTime),
+      song:      song,
+      startTime: formatTime(startTime),
+      endTime:   formatTime(endTime),
+      duration:  duration
+    };
+
+    showStatus('送信中...', 'sending');
+
+    fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors', // GASのCORS制約を回避
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(() => {
+      // no-corsモードではレスポンス内容を読めないため、送信完了で成功扱い
+      showStatus('✓ 保存しました（' + duration + '分）', 'success');
+      resetUI();
+    })
+    .catch(err => {
+      showStatus('送信エラー: ' + err.message, 'error');
+      // エラー時は終了ボタンを再度有効化してリトライできるようにする
+      document.getElementById('btn-end').disabled = false;
+    });
+  }
+
+  function resetUI() {
+    startTime = null;
+
+    document.getElementById('song-select').disabled = false;
+    document.getElementById('song-select').value = '';
+    document.getElementById('btn-start').disabled = false;
+    document.getElementById('start-card').style.display = 'block';
+    document.getElementById('practicing-area').style.display = 'none';
+    document.getElementById('timer').textContent = '00:00';
+  }
+
+  function updateTimer() {
+    if (!startTime) return;
+    const elapsed = Math.floor((new Date() - startTime) / 1000);
+    const mm = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const ss = String(elapsed % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = mm + ':' + ss;
+  }
+
+  function formatDate(d) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + day;
+  }
+
+  function formatTime(d) {
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return h + ':' + m;
+  }
+
+  function showStatus(msg, type) {
+    const el = document.getElementById('status');
+    el.textContent = msg;
+    el.className = type;
+    el.style.display = 'block';
+  }
+
+  function hideStatus() {
+    const el = document.getElementById('status');
+    el.style.display = 'none';
+    el.className = '';
+  }
+</script>
+
+</body>
+</html>
