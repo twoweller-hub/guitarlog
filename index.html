@@ -408,18 +408,32 @@
     ).join('');
   }
 
-  async function loadSongs() {
-    try {
-      const res = await fetch(GAS_URL);
-      const json = await res.json();
-      if (json.status === 'ok') {
-        renderSongSelect(json.songs);
-        renderSongList(json.songs);
-      }
-    } catch (e) {
-      document.getElementById('song-list').innerHTML =
-        '<div class="empty-message">曲リストの取得に失敗しました</div>';
-    }
+  function loadSongs() {
+    return new Promise(function(resolve) {
+      const callbackName = 'gasCallback_' + Date.now();
+      const script = document.createElement('script');
+
+      window[callbackName] = function(data) {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        if (data.status === 'ok') {
+          renderSongSelect(data.songs);
+          renderSongList(data.songs);
+        }
+        resolve();
+      };
+
+      script.onerror = function() {
+        delete window[callbackName];
+        document.head.removeChild(script);
+        document.getElementById('song-list').innerHTML =
+          '<div class="empty-message">曲リストの取得に失敗しました</div>';
+        resolve();
+      };
+
+      script.src = GAS_URL + '?callback=' + callbackName;
+      document.head.appendChild(script);
+    });
   }
 
   function addSong() {

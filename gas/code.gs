@@ -8,25 +8,29 @@ var SONGS_SHEET_NAME = '曲リスト'; // 曲名管理シート
 // ===================================================
 
 /**
- * GETリクエスト — 曲リストを返す
+ * GETリクエスト — 曲リストを返す（JSONP対応）
+ * ?callback=関数名 を付けるとJSONP形式で返す
  */
 function doGet(e) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
   var sheet = ss.getSheetByName(SONGS_SHEET_NAME);
 
-  if (!sheet) {
-    return errorResponse('シート「' + SONGS_SHEET_NAME + '」が見つかりません');
-  }
-
-  var lastRow = sheet.getLastRow();
   var songs = [];
-  if (lastRow > 0) {
-    var data = sheet.getRange(1, 1, lastRow, 1).getValues();
-    songs = data.map(function(row) { return row[0]; }).filter(function(v) { return v !== ''; });
+  if (sheet) {
+    var lastRow = sheet.getLastRow();
+    if (lastRow > 0) {
+      var data = sheet.getRange(1, 1, lastRow, 1).getValues();
+      songs = data.map(function(row) { return row[0]; }).filter(function(v) { return v !== ''; });
+    }
   }
 
-  return ContentService
-    .createTextOutput(JSON.stringify({ status: 'ok', songs: songs }))
+  var result = JSON.stringify({ status: 'ok', songs: songs });
+  var callback = e.parameter.callback;
+  if (callback) {
+    return ContentService.createTextOutput(callback + '(' + result + ')')
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
+  }
+  return ContentService.createTextOutput(result)
     .setMimeType(ContentService.MimeType.JSON);
 }
 
