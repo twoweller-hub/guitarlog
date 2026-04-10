@@ -374,19 +374,11 @@
 
   let startTime = null;
   let timerInterval = null;
+  let pendingDeleteSong = null;
 
   // ========== 曲管理 ==========
 
-  function getSongs() {
-    return JSON.parse(localStorage.getItem('songs') || '[]');
-  }
-
-  function saveSongs(songs) {
-    localStorage.setItem('songs', JSON.stringify(songs));
-  }
-
-  function renderSongSelect() {
-    const songs = getSongs();
+  function renderSongSelect(songs) {
     const select = document.getElementById('song-select');
     const current = select.value;
     select.innerHTML = '<option value="">曲を選択してください</option>';
@@ -399,58 +391,78 @@
     if (current) select.value = current;
   }
 
-  function renderSongList() {
-    const songs = getSongs();
+  function renderSongList(songs) {
     const list = document.getElementById('song-list');
     if (songs.length === 0) {
       list.innerHTML = '<div class="empty-message">曲が登録されていません</div>';
       return;
     }
-    list.innerHTML = songs.map((song, i) =>
+    list.innerHTML = songs.map(song =>
       `<div class="song-item">
         <span>${song}</span>
-        <button class="btn-delete" onclick="deleteSong(${i})" title="削除">✕</button>
+        <button class="btn-delete" onclick="deleteSong('${song.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>
       </div>`
     ).join('');
   }
 
-  function addSong() {
+  async function loadSongs() {
+    try {
+      const res = await fetch(GAS_URL);
+      const json = await res.json();
+      if (json.status === 'ok') {
+        renderSongSelect(json.songs);
+        renderSongList(json.songs);
+      }
+    } catch (e) {
+      document.getElementById('song-list').innerHTML =
+        '<div class="empty-message">曲リストの取得に失敗しました</div>';
+    }
+  }
+
+  async function addSong() {
     const input = document.getElementById('new-song-input');
     const name = input.value.trim();
     if (!name) return;
-    const songs = getSongs();
-    if (songs.includes(name)) {
-      alert('その曲はすでに登録されています');
-      return;
-    }
-    songs.push(name);
-    saveSongs(songs);
+
+    const btn = document.querySelector('.btn-add');
+    btn.disabled = true;
+    btn.textContent = '追加中...';
+
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'addSong', song: name })
+    }).catch(() => {});
+
     input.value = '';
-    renderSongSelect();
-    renderSongList();
+    btn.disabled = false;
+    btn.textContent = '追加';
+    await loadSongs();
   }
 
-  let pendingDeleteIndex = null;
-
-  function deleteSong(index) {
-    const songs = getSongs();
-    pendingDeleteIndex = index;
-    document.getElementById('modal-message').textContent = `"${songs[index]}" を削除しますか？`;
+  function deleteSong(song) {
+    pendingDeleteSong = song;
+    document.getElementById('modal-message').textContent = `"${song}" を削除しますか？`;
     document.getElementById('modal-overlay').classList.add('active');
   }
 
-  function confirmModal() {
-    if (pendingDeleteIndex === null) return;
-    const songs = getSongs();
-    songs.splice(pendingDeleteIndex, 1);
-    saveSongs(songs);
-    renderSongSelect();
-    renderSongList();
+  async function confirmModal() {
+    if (!pendingDeleteSong) return;
     closeModal();
+
+    await fetch(GAS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'deleteSong', song: pendingDeleteSong })
+    }).catch(() => {});
+
+    await loadSongs();
   }
 
   function closeModal() {
-    pendingDeleteIndex = null;
+    pendingDeleteSong = null;
     document.getElementById('modal-overlay').classList.remove('active');
   }
 
@@ -569,8 +581,7 @@
   }
 
   // ========== 初期化 ==========
-  renderSongSelect();
-  renderSongList();
+  loadSongs();
 
   // Enterキーで曲追加
   document.getElementById('new-song-input').addEventListener('keydown', function(e) {
