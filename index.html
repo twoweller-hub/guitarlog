@@ -400,12 +400,13 @@
       list.innerHTML = '<div class="empty-message">曲が登録されていません</div>';
       return;
     }
-    list.innerHTML = songs.map(song =>
-      `<div class="song-item">
-        <span>${song}</span>
-        <button class="btn-delete" onclick="deleteSong('${song.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>
-      </div>`
-    ).join('');
+    list.innerHTML = songs.map(song => {
+      const s = String(song);
+      return `<div class="song-item">
+        <span>${s}</span>
+        <button class="btn-delete" onclick="deleteSong('${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>
+      </div>`;
+    }).join('');
   }
 
   function loadSongs() {

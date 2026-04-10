@@ -20,7 +20,7 @@ function doGet(e) {
     var lastRow = sheet.getLastRow();
     if (lastRow > 0) {
       var data = sheet.getRange(1, 1, lastRow, 1).getValues();
-      songs = data.map(function(row) { return row[0]; }).filter(function(v) { return v !== ''; });
+      songs = data.map(function(row) { return '' + row[0]; }).filter(function(v) { return v !== ''; });
     }
   }
 
