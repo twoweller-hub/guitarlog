@@ -70,14 +70,25 @@ function logPractice(data) {
   var lastRow = sheet.getLastRow();
   var newRow = lastRow + 1;
 
+  // 同じ曲のF列の最大値を探して+1する
+  var maxCount = 0;
+  if (newRow > 2) {
+    var songCol = sheet.getRange(2, 2, newRow - 2, 1).getValues();
+    var countCol = sheet.getRange(2, 6, newRow - 2, 1).getValues();
+    for (var i = 0; i < songCol.length; i++) {
+      if (songCol[i][0] === data.song) {
+        var cnt = parseFloat(countCol[i][0]);
+        if (!isNaN(cnt) && cnt > maxCount) maxCount = cnt;
+      }
+    }
+  }
+
   sheet.getRange(newRow, 1).setValue(data.date);
   sheet.getRange(newRow, 2).setValue(data.song);
   sheet.getRange(newRow, 3).setValue(data.startTime);
   sheet.getRange(newRow, 4).setValue(data.endTime);
   sheet.getRange(newRow, 5).setValue(data.duration);
-
-  var countifFormula = '=COUNTIF(B$2:B' + newRow + ',B' + newRow + ')';
-  sheet.getRange(newRow, 6).setFormula(countifFormula);
+  sheet.getRange(newRow, 6).setValue(maxCount + 1);
 
   return ContentService
     .createTextOutput(JSON.stringify({ status: 'ok', row: newRow }))
