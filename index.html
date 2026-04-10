@@ -77,6 +77,51 @@
       cursor: not-allowed;
     }
 
+    /* 曲追加エリア */
+    #add-song-area {
+      display: none;
+      margin-top: 12px;
+    }
+    #add-song-area input {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 1.5px solid #dde1e7;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      color: #1a1a2e;
+    }
+    #add-song-area input:focus {
+      outline: none;
+      border-color: #ee8727;
+    }
+    .add-song-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-add-confirm {
+      flex: 1;
+      padding: 12px;
+      background: #ee8727;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-add-cancel {
+      flex: 1;
+      padding: 12px;
+      background: #f2f4f7;
+      color: #555;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     /* ボタン */
     .btn {
       width: 100%;
@@ -196,7 +241,17 @@
       <option value="Race Problem / B-DASH">Race Problem / B-DASH</option>
       <option value="小さな恋のうた / MONGOL800">小さな恋のうた / MONGOL800</option>
       <option value="Sleep / Lagwagon">Sleep / Lagwagon</option>
+      <option value="__add__">＋ 曲を追加...</option>
     </select>
+
+    <!-- 曲追加エリア -->
+    <div id="add-song-area">
+      <input type="text" id="new-song-input" placeholder="曲名を入力（例: New Song / Artist）">
+      <div class="add-song-buttons">
+        <button class="btn-add-confirm" onclick="confirmAddSong()">追加</button>
+        <button class="btn-add-cancel" onclick="cancelAddSong()">キャンセル</button>
+      </div>
+    </div>
   </div>
 
   <!-- 開始ボタンカード -->
@@ -225,6 +280,57 @@
 
   let startTime = null;
   let timerInterval = null;
+
+  // ページ読み込み時にlocalStorageの追加曲をプルダウンに反映
+  (function loadCustomSongs() {
+    const songs = JSON.parse(localStorage.getItem('customSongs') || '[]');
+    const select = document.getElementById('song-select');
+    const addOption = select.querySelector('option[value="__add__"]');
+    songs.forEach(song => {
+      const opt = document.createElement('option');
+      opt.value = song;
+      opt.textContent = song;
+      select.insertBefore(opt, addOption);
+    });
+  })();
+
+  // プルダウン変更イベント：「＋ 曲を追加...」が選ばれたとき
+  document.getElementById('song-select').addEventListener('change', function() {
+    if (this.value === '__add__') {
+      this.value = '';
+      document.getElementById('add-song-area').style.display = 'block';
+      document.getElementById('new-song-input').focus();
+    }
+  });
+
+  function confirmAddSong() {
+    const input = document.getElementById('new-song-input');
+    const songName = input.value.trim();
+    if (!songName) return;
+
+    // プルダウンに追加
+    const select = document.getElementById('song-select');
+    const addOption = select.querySelector('option[value="__add__"]');
+    const opt = document.createElement('option');
+    opt.value = songName;
+    opt.textContent = songName;
+    select.insertBefore(opt, addOption);
+
+    // localStorageに保存
+    const songs = JSON.parse(localStorage.getItem('customSongs') || '[]');
+    songs.push(songName);
+    localStorage.setItem('customSongs', JSON.stringify(songs));
+
+    // 追加した曲を選択状態にして入力欄を閉じる
+    select.value = songName;
+    input.value = '';
+    document.getElementById('add-song-area').style.display = 'none';
+  }
+
+  function cancelAddSong() {
+    document.getElementById('new-song-input').value = '';
+    document.getElementById('add-song-area').style.display = 'none';
+  }
 
   function startPractice() {
     const song = document.getElementById('song-select').value;
