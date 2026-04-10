@@ -1,11 +1,10 @@
-const CACHE = 'guitarlog-v5';
+const CACHE = 'guitarlog-v6';
 const URLS = [
   '/guitarlog/',
   '/guitarlog/index.html',
   '/guitarlog/manifest.webmanifest',
   '/guitarlog/icon-192.png',
-  '/guitarlog/icon-512.png',
-  'https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js'
+  '/guitarlog/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
