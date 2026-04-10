@@ -587,10 +587,10 @@
     const emptyMsg = list.querySelector('.empty-message');
     if (emptyMsg) emptyMsg.remove();
     songCounts[name] = 0;
-    const item = document.createElement('div');
-    item.className = 'song-item';
-    item.innerHTML = `<span class="drag-handle">☰</span><span class="song-name-text">${name}</span><span class="song-count">0回</span><button class="btn-delete" onclick="deleteSong('${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>`;
-    list.appendChild(item);
+    const songItem = document.createElement('div');
+    songItem.className = 'song-item';
+    songItem.innerHTML = `<span class="drag-handle">☰</span><span class="song-name-text">${name}</span><span class="song-count">0回</span><button class="btn-delete" onclick="deleteSong('${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>`;
+    list.appendChild(songItem);
 
     input.value = '';
 
