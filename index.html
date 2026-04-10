@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ギター練習記録</title>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
   <link rel="manifest" href="/guitarlog/manifest.webmanifest">
   <meta name="theme-color" content="#ee8727">
   <meta name="mobile-web-app-capable" content="yes">
@@ -229,6 +230,13 @@
       font-size: 15px;
     }
     .song-item:last-child { border-bottom: none; }
+    .drag-handle {
+      color: #ccc;
+      font-size: 16px;
+      padding-right: 12px;
+      cursor: grab;
+      flex-shrink: 0;
+    }
     .btn-delete {
       background: none;
       border: none;
@@ -403,10 +411,12 @@
     list.innerHTML = songs.map(song => {
       const s = String(song);
       return `<div class="song-item">
+        <span class="drag-handle">☰</span>
         <span>${s}</span>
         <button class="btn-delete" onclick="deleteSong('${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>
       </div>`;
     }).join('');
+    initSortable();
   }
 
   function loadSongs() {
@@ -489,6 +499,27 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'addSong', song: name })
     }).catch(() => {});
+  }
+
+  function initSortable() {
+    const list = document.getElementById('song-list');
+    if (window.Sortable) {
+      Sortable.create(list, {
+        animation: 150,
+        handle: '.drag-handle',
+        onEnd: function() {
+          const songs = Array.from(list.querySelectorAll('.song-item span:nth-child(2)'))
+            .map(el => el.textContent);
+          renderSongSelect(songs);
+          fetch(GAS_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'reorderSongs', songs: songs })
+          }).catch(() => {});
+        }
+      });
+    }
   }
 
   function deleteSong(song) {

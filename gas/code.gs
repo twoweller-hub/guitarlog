@@ -49,6 +49,8 @@ function doPost(e) {
       return addSong(data.song);
     } else if (data.action === 'deleteSong') {
       return deleteSong(data.song);
+    } else if (data.action === 'reorderSongs') {
+      return reorderSongs(data.songs);
     } else {
       return logPractice(data);
     }
@@ -124,6 +126,25 @@ function deleteSong(songName) {
     }
   }
   return errorResponse('曲が見つかりません');
+}
+
+/**
+ * 曲リストを新しい順番で書き直す
+ */
+function reorderSongs(songs) {
+  var ss = SpreadsheetApp.openById(SHEET_ID);
+  var sheet = ss.getSheetByName(SONGS_SHEET_NAME);
+  if (!sheet) return errorResponse('曲リストシートが見つかりません');
+
+  sheet.clearContents();
+  if (songs.length > 0) {
+    var data = songs.map(function(s) { return [s]; });
+    sheet.getRange(1, 1, data.length, 1).setValues(data);
+  }
+
+  return ContentService
+    .createTextOutput(JSON.stringify({ status: 'ok' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
 function errorResponse(message) {
