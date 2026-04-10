@@ -419,26 +419,38 @@
     }
   }
 
-  async function addSong() {
+  function addSong() {
     const input = document.getElementById('new-song-input');
     const name = input.value.trim();
     if (!name) return;
 
-    const btn = document.querySelector('.btn-add');
-    btn.disabled = true;
-    btn.textContent = '追加中...';
+    // プルダウンに同じ曲がすでにあれば追加しない
+    const select = document.getElementById('song-select');
+    if (Array.from(select.options).some(opt => opt.value === name)) return;
 
-    await fetch(GAS_URL, {
+    // UIに即座に追加
+    const opt = document.createElement('option');
+    opt.value = name;
+    opt.textContent = name;
+    select.appendChild(opt);
+
+    const list = document.getElementById('song-list');
+    const emptyMsg = list.querySelector('.empty-message');
+    if (emptyMsg) emptyMsg.remove();
+    const item = document.createElement('div');
+    item.className = 'song-item';
+    item.innerHTML = `<span>${name}</span><button class="btn-delete" onclick="deleteSong('${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>`;
+    list.appendChild(item);
+
+    input.value = '';
+
+    // GASへはバックグラウンドで送信
+    fetch(GAS_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'addSong', song: name })
     }).catch(() => {});
-
-    input.value = '';
-    btn.disabled = false;
-    btn.textContent = '追加';
-    await loadSongs();
   }
 
   function deleteSong(song) {
