@@ -116,7 +116,7 @@ function deleteSong(songName) {
 
   var data = sheet.getRange(1, 1, lastRow, 1).getValues();
   for (var i = 0; i < data.length; i++) {
-    if (data[i][0] === songName) {
+    if (('' + data[i][0]) === ('' + songName)) {
       sheet.deleteRow(i + 1);
       return ContentService
         .createTextOutput(JSON.stringify({ status: 'ok' }))
