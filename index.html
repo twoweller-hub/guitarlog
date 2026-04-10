@@ -76,25 +76,82 @@
       margin-bottom: 10px;
     }
 
-    /* プルダウン */
-    select {
+    /* カスタムドロップダウン */
+    .custom-select {
+      position: relative;
       width: 100%;
+    }
+    .custom-select-trigger {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 14px 16px;
-      font-size: 16px;
+      font-size: 15px;
       border: 1.5px solid #dde1e7;
       border-radius: 8px;
       background: white;
       color: #1a1a2e;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 14px center;
       cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
     }
-    select:disabled {
+    .custom-select-trigger.disabled {
       background-color: #f5f5f5;
       color: #aaa;
       cursor: not-allowed;
+      pointer-events: none;
+    }
+    .custom-select-trigger .placeholder {
+      color: #aaa;
+    }
+    .select-arrow {
+      color: #888;
+      font-size: 11px;
+      flex-shrink: 0;
+      margin-left: 8px;
+      transition: transform 0.2s;
+    }
+    .custom-select-trigger.open .select-arrow {
+      transform: rotate(180deg);
+    }
+    .custom-select-dropdown {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      background: white;
+      border: 1.5px solid #dde1e7;
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      z-index: 50;
+      max-height: 55vh;
+      overflow-y: auto;
+    }
+    .custom-select-dropdown.open {
+      display: block;
+    }
+    .custom-option {
+      padding: 12px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border-bottom: 1px solid #f0f0f0;
+      line-height: 1.3;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .custom-option:last-child { border-bottom: none; }
+    .custom-option:active { background: #f5f5f5; }
+    .custom-option-name {
+      flex: 1;
+    }
+    .custom-option-count {
+      font-size: 12px;
+      color: #aaa;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     /* ボタン */
@@ -343,9 +400,13 @@
     <!-- 曲選択カード -->
     <div class="card">
       <div class="label">SONG</div>
-      <select id="song-select">
-        <option value="">曲を選択してください</option>
-      </select>
+      <div class="custom-select" id="song-select-wrapper">
+        <div class="custom-select-trigger" id="song-select-trigger" onclick="toggleSongSelect()">
+          <span id="song-select-label" class="placeholder">曲を選択してください</span>
+          <span class="select-arrow">▼</span>
+        </div>
+        <div class="custom-select-dropdown" id="song-select-dropdown"></div>
+      </div>
     </div>
 
     <!-- 開始ボタンカード -->
@@ -396,21 +457,46 @@
   let timerInterval = null;
   let pendingDeleteSong = null;
   let songCounts = {};
+  let selectedSong = '';
 
   // ========== 曲管理 ==========
 
   function renderSongSelect(songs) {
-    const select = document.getElementById('song-select');
-    const current = select.value;
-    select.innerHTML = '<option value="">曲を選択してください</option>';
+    const dropdown = document.getElementById('song-select-dropdown');
+    dropdown.innerHTML = '';
     songs.forEach(song => {
-      const opt = document.createElement('option');
-      opt.value = song;
       const count = songCounts[song] !== undefined ? songCounts[song] : 0;
-      opt.textContent = song + '（' + count + '回）';
-      select.appendChild(opt);
+      const item = document.createElement('div');
+      item.className = 'custom-option';
+      item.innerHTML = `<span class="custom-option-name">${song}</span><span class="custom-option-count">${count}回</span>`;
+      item.onclick = () => selectSongOption(song);
+      dropdown.appendChild(item);
     });
-    if (current) select.value = current;
+  }
+
+  function toggleSongSelect() {
+    const dropdown = document.getElementById('song-select-dropdown');
+    const trigger = document.getElementById('song-select-trigger');
+    if (dropdown.classList.contains('open')) {
+      dropdown.classList.remove('open');
+      trigger.classList.remove('open');
+    } else {
+      dropdown.classList.add('open');
+      trigger.classList.add('open');
+    }
+  }
+
+  function closeSongSelect() {
+    document.getElementById('song-select-dropdown').classList.remove('open');
+    document.getElementById('song-select-trigger').classList.remove('open');
+  }
+
+  function selectSongOption(song) {
+    selectedSong = song;
+    const label = document.getElementById('song-select-label');
+    label.textContent = song;
+    label.classList.remove('placeholder');
+    closeSongSelect();
   }
 
   function renderSongList(songs) {
@@ -487,14 +573,15 @@
     if (!name) return;
 
     // プルダウンに同じ曲がすでにあれば追加しない
-    const select = document.getElementById('song-select');
-    if (Array.from(select.options).some(opt => opt.value === name)) return;
+    const dropdown = document.getElementById('song-select-dropdown');
+    if (Array.from(dropdown.querySelectorAll('.custom-option-name')).some(el => el.textContent === name)) return;
 
-    // UIに即座に追加
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    select.appendChild(opt);
+    // プルダウンに即座に追加
+    const item = document.createElement('div');
+    item.className = 'custom-option';
+    item.innerHTML = `<span class="custom-option-name">${name}</span><span class="custom-option-count">0回</span>`;
+    item.onclick = () => selectSongOption(name);
+    dropdown.appendChild(item);
 
     const list = document.getElementById('song-list');
     const emptyMsg = list.querySelector('.empty-message');
@@ -588,7 +675,7 @@
   // ========== 練習 ==========
 
   function startPractice() {
-    const song = document.getElementById('song-select').value;
+    const song = selectedSong;
     if (!song) {
       showStatus('曲を選択してください', 'error');
       return;
@@ -597,7 +684,7 @@
     startTime = new Date();
     hideStatus();
 
-    document.getElementById('song-select').disabled = true;
+    document.getElementById('song-select-trigger').classList.add('disabled');
     document.getElementById('btn-start').disabled = true;
     document.getElementById('start-card').style.display = 'none';
 
@@ -611,7 +698,7 @@
 
   function endPractice() {
     const endTime = new Date();
-    const song = document.getElementById('song-select').value;
+    const song = selectedSong;
 
     clearInterval(timerInterval);
     timerInterval = null;
@@ -648,8 +735,11 @@
 
   function resetUI() {
     startTime = null;
-    document.getElementById('song-select').disabled = false;
-    document.getElementById('song-select').value = '';
+    selectedSong = '';
+    const label = document.getElementById('song-select-label');
+    label.textContent = '曲を選択してください';
+    label.classList.add('placeholder');
+    document.getElementById('song-select-trigger').classList.remove('disabled');
     document.getElementById('btn-start').disabled = false;
     document.getElementById('start-card').style.display = 'block';
     document.getElementById('practicing-area').style.display = 'none';
@@ -696,6 +786,12 @@
   // Enterキーで曲追加
   document.getElementById('new-song-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.isComposing) addSong();
+  });
+
+  // ドロップダウン外タップで閉じる
+  document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('song-select-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) closeSongSelect();
   });
 </script>
 
