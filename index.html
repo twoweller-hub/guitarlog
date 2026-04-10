@@ -237,6 +237,15 @@
       cursor: grab;
       flex-shrink: 0;
     }
+    .song-name-text {
+      flex: 1;
+    }
+    .song-count {
+      font-size: 12px;
+      color: #bbb;
+      margin: 0 8px;
+      white-space: nowrap;
+    }
     .btn-delete {
       background: none;
       border: none;
@@ -386,6 +395,7 @@
   let startTime = null;
   let timerInterval = null;
   let pendingDeleteSong = null;
+  let songCounts = {};
 
   // ========== 曲管理 ==========
 
@@ -396,7 +406,8 @@
     songs.forEach(song => {
       const opt = document.createElement('option');
       opt.value = song;
-      opt.textContent = song;
+      const count = songCounts[song] !== undefined ? songCounts[song] : 0;
+      opt.textContent = song + '（' + count + '回）';
       select.appendChild(opt);
     });
     if (current) select.value = current;
@@ -410,9 +421,11 @@
     }
     list.innerHTML = songs.map(song => {
       const s = String(song);
+      const count = songCounts[s] !== undefined ? songCounts[s] : 0;
       return `<div class="song-item">
         <span class="drag-handle">☰</span>
-        <span>${s}</span>
+        <span class="song-name-text">${s}</span>
+        <span class="song-count">${count}回</span>
         <button class="btn-delete" onclick="deleteSong('${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>
       </div>`;
     }).join('');
@@ -445,6 +458,7 @@
         delete window[callbackName];
         if (script.parentNode) document.head.removeChild(script);
         if (data.status === 'ok') {
+          songCounts = data.counts || {};
           renderSongSelect(data.songs);
           renderSongList(data.songs);
         }
@@ -485,9 +499,10 @@
     const list = document.getElementById('song-list');
     const emptyMsg = list.querySelector('.empty-message');
     if (emptyMsg) emptyMsg.remove();
+    songCounts[name] = 0;
     const item = document.createElement('div');
     item.className = 'song-item';
-    item.innerHTML = `<span>${name}</span><button class="btn-delete" onclick="deleteSong('${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>`;
+    item.innerHTML = `<span class="drag-handle">☰</span><span class="song-name-text">${name}</span><span class="song-count">0回</span><button class="btn-delete" onclick="deleteSong('${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>`;
     list.appendChild(item);
 
     input.value = '';
@@ -508,7 +523,7 @@
         animation: 150,
         handle: '.drag-handle',
         onEnd: function() {
-          const songs = Array.from(list.querySelectorAll('.song-item span:nth-child(2)'))
+          const songs = Array.from(list.querySelectorAll('.song-name-text'))
             .map(el => el.textContent);
           renderSongSelect(songs);
           fetch(GAS_URL, {
@@ -537,7 +552,7 @@
     const listEl = document.getElementById('song-list');
     const items = listEl.querySelectorAll('.song-item');
     items.forEach(item => {
-      if (item.querySelector('span').textContent === song) item.remove();
+      if (item.querySelector('.song-name-text').textContent === song) item.remove();
     });
     const select = document.getElementById('song-select');
     Array.from(select.options).forEach(opt => {

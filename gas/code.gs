@@ -24,7 +24,26 @@ function doGet(e) {
     }
   }
 
-  var result = JSON.stringify({ status: 'ok', songs: songs });
+  // 各曲の通算回数（F列の最大値）を取得
+  var counts = {};
+  songs.forEach(function(s) { counts[s] = 0; });
+  var practiceSheet = ss.getSheetByName(SHEET_NAME);
+  if (practiceSheet) {
+    var lastRow2 = practiceSheet.getLastRow();
+    if (lastRow2 > 1) {
+      var songCol = practiceSheet.getRange(2, 2, lastRow2 - 1, 1).getValues();
+      var countCol = practiceSheet.getRange(2, 6, lastRow2 - 1, 1).getValues();
+      for (var i = 0; i < songCol.length; i++) {
+        var songName = '' + songCol[i][0];
+        var cnt = parseFloat(countCol[i][0]);
+        if (!isNaN(cnt) && counts[songName] !== undefined && cnt > counts[songName]) {
+          counts[songName] = cnt;
+        }
+      }
+    }
+  }
+
+  var result = JSON.stringify({ status: 'ok', songs: songs, counts: counts });
   var callback = e.parameter.callback;
   if (callback) {
     return ContentService.createTextOutput(callback + '(' + result + ')')
