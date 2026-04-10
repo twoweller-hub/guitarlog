@@ -409,13 +409,30 @@
   }
 
   function loadSongs() {
+    document.getElementById('song-list').innerHTML =
+      '<div class="empty-message">読み込み中...</div>';
+
     return new Promise(function(resolve) {
       const callbackName = 'gasCallback_' + Date.now();
       const script = document.createElement('script');
+      let done = false;
+
+      const timeout = setTimeout(function() {
+        if (done) return;
+        done = true;
+        delete window[callbackName];
+        if (script.parentNode) document.head.removeChild(script);
+        document.getElementById('song-list').innerHTML =
+          '<div class="empty-message">曲リストの取得がタイムアウトしました</div>';
+        resolve();
+      }, 10000);
 
       window[callbackName] = function(data) {
+        if (done) return;
+        done = true;
+        clearTimeout(timeout);
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (script.parentNode) document.head.removeChild(script);
         if (data.status === 'ok') {
           renderSongSelect(data.songs);
           renderSongList(data.songs);
@@ -424,8 +441,11 @@
       };
 
       script.onerror = function() {
+        if (done) return;
+        done = true;
+        clearTimeout(timeout);
         delete window[callbackName];
-        document.head.removeChild(script);
+        if (script.parentNode) document.head.removeChild(script);
         document.getElementById('song-list').innerHTML =
           '<div class="empty-message">曲リストの取得に失敗しました</div>';
         resolve();
