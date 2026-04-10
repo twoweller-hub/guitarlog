@@ -4,7 +4,7 @@
 // 【設定】デプロイ前にここを書き換える
 // GoogleスプレッドシートのURLに含まれるID
 // 例: https://docs.google.com/spreadsheets/d/【ここがID】/edit
-var SHEET_ID = 'YOUR_SPREADSHEET_ID_HERE';
+var SHEET_ID = '12pZVt7aGA5NzBeRZN_wo6cDh4ryW7aTrGZfpOTeDpEk';
 
 // シート名（デフォルトは「シート1」）
 var SHEET_NAME = 'シート1';
