@@ -449,16 +449,30 @@
 
   async function confirmModal() {
     if (!pendingDeleteSong) return;
+    const song = pendingDeleteSong;
     closeModal();
 
-    await fetch(GAS_URL, {
+    // UIから即座に削除
+    const listEl = document.getElementById('song-list');
+    const items = listEl.querySelectorAll('.song-item');
+    items.forEach(item => {
+      if (item.querySelector('span').textContent === song) item.remove();
+    });
+    const select = document.getElementById('song-select');
+    Array.from(select.options).forEach(opt => {
+      if (opt.value === song) opt.remove();
+    });
+    if (listEl.querySelectorAll('.song-item').length === 0) {
+      listEl.innerHTML = '<div class="empty-message">曲が登録されていません</div>';
+    }
+
+    // GASへはバックグラウンドで送信
+    fetch(GAS_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'deleteSong', song: pendingDeleteSong })
+      body: JSON.stringify({ action: 'deleteSong', song: song })
     }).catch(() => {});
-
-    await loadSongs();
   }
 
   function closeModal() {
