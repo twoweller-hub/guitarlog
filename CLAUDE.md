@@ -44,8 +44,18 @@
 - バックエンド: Google Apps Script（`gas/code.gs`）
 - データ保存先: Google スプレッドシート
 - ライブラリ: SortableJS（CDN）
+- 曲選択UI: カスタムドロップダウン（`<select>` は使わずHTML/CSS/JSで独自実装）
+
+## 通算回数の表示
+- 練習タブのプルダウン（カスタムドロップダウン）と曲管理タブの曲一覧に表示
+- ページ読み込み時に GAS doGet が曲リストと通算回数を同時に返す
+
+## Service Worker の fetch 戦略
+- `index.html` → **ネットワーク優先**（常に最新を取得、オフライン時のみキャッシュを使う）
+- 画像・マニフェスト → **キャッシュ優先**（変更頻度が低いため）
+- アプリを更新したときに古い HTML が使われ続ける問題を防ぐための設計
 
 ## 重要な設定値
 - スプレッドシート ID: `12pZVt7aGA5NzBeRZN_wo6cDh4ryW7aTrGZfpOTeDpEk`
 - GAS URL: `index.html` 内の `GAS_URL` 定数に記載
-- Service Worker キャッシュバージョン: `sw.js` の `CACHE` 定数で管理
+- Service Worker キャッシュバージョン: `sw.js` の `CACHE` 定数で管理（現在 v9）

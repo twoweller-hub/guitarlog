@@ -139,11 +139,47 @@ Excel などの過去データをインポートする場合：
 
 ```js
 // 変更前
-const CACHE = 'guitarlog-v6';
+const CACHE = 'guitarlog-v8';
 
 // 変更後（数字を +1 する）
-const CACHE = 'guitarlog-v7';
+const CACHE = 'guitarlog-v9';
 ```
+
+### Service Worker の fetch 戦略について（他のアプリを作るときのヒント）
+
+このアプリでは SW の fetch 戦略をファイルの種類によって分けている：
+
+```js
+self.addEventListener('fetch', e => {
+  const url = new URL(e.request.url);
+
+  // index.html はネットワーク優先
+  if (url.pathname === '/guitarlog/' || url.pathname === '/guitarlog/index.html') {
+    e.respondWith(
+      fetch(e.request)
+        .then(response => {
+          // 取得できたら最新版をキャッシュに保存しておく
+          const clone = response.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(e.request)) // オフライン時のみキャッシュを使う
+    );
+    return;
+  }
+
+  // 画像・マニフェストはキャッシュ優先
+  e.respondWith(
+    caches.match(e.request).then(r => r || fetch(e.request))
+  );
+});
+```
+
+**なぜこの設計にするか：**
+
+すべてをキャッシュ優先にすると、アプリを更新して GitHub に push しても、端末が古い `index.html` を使い続けるという問題が発生する。特に SW の新バージョンがインストールされるタイミングと GitHub Pages の CDN 更新タイミングがずれると、新しい SW が古いファイルをキャッシュしてしまう。
+
+`index.html` だけをネットワーク優先にすることで、常に最新のアプリが実行される。アイコンやマニフェストは変更頻度が低いのでキャッシュ優先のままで問題ない。
 
 ---
 
@@ -303,3 +339,42 @@ const URLS = [
 **問題**: Chrome の「ホーム画面に追加」を押した後に2択が出ることに気づかず、「ショートカット作成」を選んでしまうとブラウザのタブとして開くだけでスタンドアロン PWA にならない。
 
 **解決策**: 必ず「インストール」を選ぶ。これを選んだ場合のみアドレスバーなしのスタンドアロンアプリになる。
+
+---
+
+### 10. Service Worker が古い index.html をキャッシュし続ける
+
+**問題**: `sw.js` のバージョンを上げて push しても、通常リロードで古いアプリが表示され続ける。ハード読み込みでは最新版が表示されるのに通常リロードでは表示されない、という現象が Mac・Galaxy 両方で発生した。
+
+**原因**: SW を新バージョンに更新した際、GitHub Pages の CDN がまだ古いファイルを配信していた。新しい SW が「最新のつもりで」古い `index.html` をキャッシュしてしまい、以後その古いキャッシュを使い続けた。
+
+**解決策**: `index.html` の fetch 戦略をキャッシュ優先からネットワーク優先に変更した（詳細は「Service Worker の fetch 戦略」セクション参照）。これにより今後は同じ問題が起きない。
+
+緊急回避策（一時的な対処）: Chrome DevTools → Application → Service Workers → 「登録解除」→ ハード読み込み。
+
+---
+
+### 11. Android の `<select>` ドロップダウンは CSS でスタイルできない
+
+**問題**: 通算回数を曲名の横に表示するようにしたところ、Android Chrome の `<select>` ドロップダウンで「曲名（XXX回）」のテキストが折り返して2行になってしまった。
+
+**原因**: Android の `<select>` が開いたときのリスト UI は OS ネイティブのコンポーネントで描画されるため、CSS で文字サイズや行の高さを制御できない。
+
+**解決策**: `<select>` を廃止し、HTML/CSS/JS でカスタムドロップダウンを実装した。これにより曲名と回数を横並び1行で表示できるようになった。
+
+```js
+// カスタムドロップダウンの主な構造
+// HTML: .custom-select > .custom-select-trigger + .custom-select-dropdown
+// JS: toggleSongSelect() / selectSongOption(song) / closeSongSelect()
+// 外側タップで閉じる: document.addEventListener('click', ...)
+```
+
+---
+
+### 12. 同一スコープ内での変数名重複による SyntaxError
+
+**問題**: カスタムドロップダウン実装時に `addSong()` 関数内で `const item` を2回宣言してしまい、SyntaxError が発生。JS 全体が動かなくなり、タブ切り替えもボタンも一切機能しなくなった。
+
+**解決策**: 2つ目の宣言を `const songItem` に改名した。`const` は同一スコープ内で同じ名前を再宣言できないため、エラーになる。
+
+**教訓**: JS が全く動かなくなったときは SyntaxError を疑う。ブラウザの DevTools → コンソールでエラーメッセージを確認すると原因がすぐわかる。
