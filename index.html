@@ -18,18 +18,34 @@
     header {
       background: #ee8727;
       color: white;
-      padding: 20px;
+      padding: 20px 20px 0;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     header h1 {
       font-size: 20px;
       font-weight: 700;
+      padding-bottom: 14px;
     }
-    header p {
-      font-size: 13px;
-      opacity: 0.8;
-      margin-top: 4px;
+
+    /* タブ */
+    .tabs { display: flex; gap: 4px; }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 4px;
+      border: none;
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      transition: all 0.2s;
     }
+    .tab-btn.active { color: white; border-bottom-color: white; }
+
+    /* タブコンテンツ */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
 
     /* メインコンテンツ */
     main {
@@ -75,51 +91,6 @@
       background-color: #f5f5f5;
       color: #aaa;
       cursor: not-allowed;
-    }
-
-    /* 曲追加エリア */
-    #add-song-area {
-      display: none;
-      margin-top: 12px;
-    }
-    #add-song-area input {
-      width: 100%;
-      padding: 12px 14px;
-      font-size: 16px;
-      border: 1.5px solid #dde1e7;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      color: #1a1a2e;
-    }
-    #add-song-area input:focus {
-      outline: none;
-      border-color: #ee8727;
-    }
-    .add-song-buttons {
-      display: flex;
-      gap: 8px;
-    }
-    .btn-add-confirm {
-      flex: 1;
-      padding: 12px;
-      background: #ee8727;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .btn-add-cancel {
-      flex: 1;
-      padding: 12px;
-      background: #f2f4f7;
-      color: #555;
-      border: none;
-      border-radius: 8px;
-      font-size: 15px;
-      font-weight: 700;
-      cursor: pointer;
     }
 
     /* ボタン */
@@ -211,63 +182,186 @@
       color: #1565c0;
       border: 1.5px solid #90caf9;
     }
+
+    /* 曲管理タブ */
+    .add-song-row {
+      display: flex;
+      gap: 8px;
+    }
+    .add-song-row input {
+      flex: 1;
+      padding: 12px 14px;
+      font-size: 16px;
+      border: 1.5px solid #dde1e7;
+      border-radius: 8px;
+      color: #1a1a2e;
+    }
+    .add-song-row input:focus {
+      outline: none;
+      border-color: #ee8727;
+    }
+    .btn-add {
+      padding: 12px 18px;
+      background: #ee8727;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-add:active { transform: scale(0.97); }
+
+    /* 曲リスト */
+    .song-list {
+      margin-top: 4px;
+    }
+    .song-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 15px;
+    }
+    .song-item:last-child { border-bottom: none; }
+    .btn-delete {
+      background: none;
+      border: none;
+      color: #bbb;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-delete:active { color: #ae3333; }
+
+    .empty-message {
+      color: #aaa;
+      font-size: 14px;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    /* 確認モーダル */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .modal-message {
+      font-size: 15px;
+      color: #1a1a2e;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+    .modal-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .modal-btn-cancel {
+      flex: 1;
+      padding: 12px;
+      background: #f2f4f7;
+      color: #555;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .modal-btn-delete {
+      flex: 1;
+      padding: 12px;
+      background: #ae3333;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
 <header>
   <h1>🎸 ギター練習記録</h1>
-  <p>練習したらスプレッドシートに自動保存</p>
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('practice')">練習</button>
+    <button class="tab-btn" onclick="switchTab('songs')">曲管理</button>
+  </div>
 </header>
 
 <main>
 
-  <!-- ステータス表示 -->
-  <div id="status"></div>
+  <!-- 練習タブ -->
+  <div class="tab-content active" id="tab-practice">
 
-  <!-- 曲選択カード -->
-  <div class="card">
-    <div class="label">SONG</div>
-    <select id="song-select">
-      <option value="">曲を選択してください</option>
-      <option value="Linoleum / NOFX">Linoleum / NOFX</option>
-      <option value="あなたに / MONGOL800">あなたに / MONGOL800</option>
-      <option value="An Idea For a Movie / Vandals">An Idea For a Movie / Vandals</option>
-      <option value="New Life / Hi-STANDARD">New Life / Hi-STANDARD</option>
-      <option value="Let It Be / Beatles">Let It Be / Beatles</option>
-      <option value="Kiss me again / Hi-STANDARD">Kiss me again / Hi-STANDARD</option>
-      <option value="Lonely / Hi-STANDARD">Lonely / Hi-STANDARD</option>
-      <option value="Smells Like Teen Spirit / Nirvana">Smells Like Teen Spirit / Nirvana</option>
-      <option value="Race Problem / B-DASH">Race Problem / B-DASH</option>
-      <option value="小さな恋のうた / MONGOL800">小さな恋のうた / MONGOL800</option>
-      <option value="Sleep / Lagwagon">Sleep / Lagwagon</option>
-      <option value="__add__">＋ 曲を追加...</option>
-    </select>
+    <!-- ステータス表示 -->
+    <div id="status"></div>
 
-    <!-- 曲追加エリア -->
-    <div id="add-song-area">
-      <input type="text" id="new-song-input" placeholder="曲名を入力（例: New Song / Artist）">
-      <div class="add-song-buttons">
-        <button class="btn-add-confirm" onclick="confirmAddSong()">追加</button>
-        <button class="btn-add-cancel" onclick="cancelAddSong()">キャンセル</button>
+    <!-- 曲選択カード -->
+    <div class="card">
+      <div class="label">SONG</div>
+      <select id="song-select">
+        <option value="">曲を選択してください</option>
+      </select>
+    </div>
+
+    <!-- 開始ボタンカード -->
+    <div class="card" id="start-card">
+      <button class="btn btn-start" id="btn-start" onclick="startPractice()">開始</button>
+    </div>
+
+    <!-- 練習中カード -->
+    <div class="card" id="practicing-area">
+      <div class="song-name" id="practicing-song"></div>
+      <div class="start-time-label" id="start-time-label"></div>
+      <div class="timer-display">
+        <div class="timer-label">経過時間</div>
+        <div class="timer-value" id="timer">00:00</div>
+      </div>
+      <button class="btn btn-end" id="btn-end" onclick="endPractice()">終了・保存</button>
+    </div>
+
+  </div>
+
+  <!-- 曲管理タブ -->
+  <div class="tab-content" id="tab-songs">
+
+    <div class="card">
+      <div class="label">曲を追加</div>
+      <div class="add-song-row">
+        <input type="text" id="new-song-input" placeholder="曲名を入力（例: New Song / Artist）">
+        <button class="btn-add" onclick="addSong()">追加</button>
       </div>
     </div>
-  </div>
 
-  <!-- 開始ボタンカード -->
-  <div class="card" id="start-card">
-    <button class="btn btn-start" id="btn-start" onclick="startPractice()">開始</button>
-  </div>
-
-  <!-- 練習中カード -->
-  <div class="card" id="practicing-area">
-    <div class="song-name" id="practicing-song"></div>
-    <div class="start-time-label" id="start-time-label"></div>
-    <div class="timer-display">
-      <div class="timer-label">経過時間</div>
-      <div class="timer-value" id="timer">00:00</div>
+    <div class="card">
+      <div class="label">曲一覧</div>
+      <div class="song-list" id="song-list"></div>
     </div>
-    <button class="btn btn-end" id="btn-end" onclick="endPractice()">終了・保存</button>
+
   </div>
 
 </main>
@@ -281,56 +375,95 @@
   let startTime = null;
   let timerInterval = null;
 
-  // ページ読み込み時にlocalStorageの追加曲をプルダウンに反映
-  (function loadCustomSongs() {
-    const songs = JSON.parse(localStorage.getItem('customSongs') || '[]');
+  // ========== 曲管理 ==========
+
+  function getSongs() {
+    return JSON.parse(localStorage.getItem('songs') || '[]');
+  }
+
+  function saveSongs(songs) {
+    localStorage.setItem('songs', JSON.stringify(songs));
+  }
+
+  function renderSongSelect() {
+    const songs = getSongs();
     const select = document.getElementById('song-select');
-    const addOption = select.querySelector('option[value="__add__"]');
+    const current = select.value;
+    select.innerHTML = '<option value="">曲を選択してください</option>';
     songs.forEach(song => {
       const opt = document.createElement('option');
       opt.value = song;
       opt.textContent = song;
-      select.insertBefore(opt, addOption);
+      select.appendChild(opt);
     });
-  })();
+    if (current) select.value = current;
+  }
 
-  // プルダウン変更イベント：「＋ 曲を追加...」が選ばれたとき
-  document.getElementById('song-select').addEventListener('change', function() {
-    if (this.value === '__add__') {
-      this.value = '';
-      document.getElementById('add-song-area').style.display = 'block';
-      document.getElementById('new-song-input').focus();
+  function renderSongList() {
+    const songs = getSongs();
+    const list = document.getElementById('song-list');
+    if (songs.length === 0) {
+      list.innerHTML = '<div class="empty-message">曲が登録されていません</div>';
+      return;
     }
-  });
+    list.innerHTML = songs.map((song, i) =>
+      `<div class="song-item">
+        <span>${song}</span>
+        <button class="btn-delete" onclick="deleteSong(${i})" title="削除">✕</button>
+      </div>`
+    ).join('');
+  }
 
-  function confirmAddSong() {
+  function addSong() {
     const input = document.getElementById('new-song-input');
-    const songName = input.value.trim();
-    if (!songName) return;
-
-    // プルダウンに追加
-    const select = document.getElementById('song-select');
-    const addOption = select.querySelector('option[value="__add__"]');
-    const opt = document.createElement('option');
-    opt.value = songName;
-    opt.textContent = songName;
-    select.insertBefore(opt, addOption);
-
-    // localStorageに保存
-    const songs = JSON.parse(localStorage.getItem('customSongs') || '[]');
-    songs.push(songName);
-    localStorage.setItem('customSongs', JSON.stringify(songs));
-
-    // 追加した曲を選択状態にして入力欄を閉じる
-    select.value = songName;
+    const name = input.value.trim();
+    if (!name) return;
+    const songs = getSongs();
+    if (songs.includes(name)) {
+      alert('その曲はすでに登録されています');
+      return;
+    }
+    songs.push(name);
+    saveSongs(songs);
     input.value = '';
-    document.getElementById('add-song-area').style.display = 'none';
+    renderSongSelect();
+    renderSongList();
   }
 
-  function cancelAddSong() {
-    document.getElementById('new-song-input').value = '';
-    document.getElementById('add-song-area').style.display = 'none';
+  let pendingDeleteIndex = null;
+
+  function deleteSong(index) {
+    const songs = getSongs();
+    pendingDeleteIndex = index;
+    document.getElementById('modal-message').textContent = `"${songs[index]}" を削除しますか？`;
+    document.getElementById('modal-overlay').classList.add('active');
   }
+
+  function confirmModal() {
+    if (pendingDeleteIndex === null) return;
+    const songs = getSongs();
+    songs.splice(pendingDeleteIndex, 1);
+    saveSongs(songs);
+    renderSongSelect();
+    renderSongList();
+    closeModal();
+  }
+
+  function closeModal() {
+    pendingDeleteIndex = null;
+    document.getElementById('modal-overlay').classList.remove('active');
+  }
+
+  // ========== タブ切り替え ==========
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  // ========== 練習 ==========
 
   function startPractice() {
     const song = document.getElementById('song-select').value;
@@ -342,18 +475,15 @@
     startTime = new Date();
     hideStatus();
 
-    // UI更新
     document.getElementById('song-select').disabled = true;
     document.getElementById('btn-start').disabled = true;
     document.getElementById('start-card').style.display = 'none';
 
     document.getElementById('practicing-song').textContent = song;
-    document.getElementById('start-time-label').textContent =
-      '開始: ' + formatTime(startTime);
+    document.getElementById('start-time-label').textContent = '開始: ' + formatTime(startTime);
     document.getElementById('practicing-area').style.display = 'block';
     document.getElementById('btn-end').disabled = false;
 
-    // タイマー開始
     timerInterval = setInterval(updateTimer, 1000);
   }
 
@@ -361,16 +491,13 @@
     const endTime = new Date();
     const song = document.getElementById('song-select').value;
 
-    // タイマー停止
     clearInterval(timerInterval);
     timerInterval = null;
 
-    // 終了ボタンを無効化（二重送信防止）
     document.getElementById('btn-end').disabled = true;
 
-    const duration = Math.round((endTime - startTime) / 60000); // 分（整数）
+    const duration = Math.round((endTime - startTime) / 60000);
 
-    // 送信データ
     const payload = {
       date:      formatDate(startTime),
       song:      song,
@@ -383,25 +510,22 @@
 
     fetch(GAS_URL, {
       method: 'POST',
-      mode: 'no-cors', // GASのCORS制約を回避
+      mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
     .then(() => {
-      // no-corsモードではレスポンス内容を読めないため、送信完了で成功扱い
       showStatus('✓ 保存しました（' + duration + '分）', 'success');
       resetUI();
     })
     .catch(err => {
       showStatus('送信エラー: ' + err.message, 'error');
-      // エラー時は終了ボタンを再度有効化してリトライできるようにする
       document.getElementById('btn-end').disabled = false;
     });
   }
 
   function resetUI() {
     startTime = null;
-
     document.getElementById('song-select').disabled = false;
     document.getElementById('song-select').value = '';
     document.getElementById('btn-start').disabled = false;
@@ -443,7 +567,27 @@
     el.style.display = 'none';
     el.className = '';
   }
+
+  // ========== 初期化 ==========
+  renderSongSelect();
+  renderSongList();
+
+  // Enterキーで曲追加
+  document.getElementById('new-song-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.isComposing) addSong();
+  });
 </script>
+
+<!-- 確認モーダル -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-message" id="modal-message"></div>
+    <div class="modal-buttons">
+      <button class="modal-btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="modal-btn-delete" onclick="confirmModal()">削除</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
