@@ -378,6 +378,21 @@
       font-weight: 700;
       cursor: pointer;
     }
+
+    /* 練習キャンセルボタン */
+    .btn-cancel-practice {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      color: #bbb;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 12px;
+      text-align: center;
+      margin-top: 4px;
+    }
+    .btn-cancel-practice:active { color: #888; }
   </style>
 </head>
 <body>
@@ -424,6 +439,7 @@
         <div class="timer-value" id="timer">00:00</div>
       </div>
       <button class="btn btn-end" id="btn-end" onclick="endPractice()">終了・保存</button>
+      <button class="btn-cancel-practice" onclick="cancelPractice()">練習をキャンセル</button>
     </div>
 
   </div>
@@ -664,6 +680,21 @@
     document.getElementById('modal-overlay').classList.remove('active');
   }
 
+  function cancelPractice() {
+    document.getElementById('cancel-modal-overlay').classList.add('active');
+  }
+
+  function closeCancelModal() {
+    document.getElementById('cancel-modal-overlay').classList.remove('active');
+  }
+
+  function confirmCancel() {
+    closeCancelModal();
+    clearInterval(timerInterval);
+    timerInterval = null;
+    resetUI();
+  }
+
   // ========== タブ切り替え ==========
 
   function switchTab(tab) {
@@ -795,6 +826,17 @@
     if (wrapper && !wrapper.contains(e.target)) closeSongSelect();
   });
 </script>
+
+<!-- 練習キャンセル確認モーダル -->
+<div class="modal-overlay" id="cancel-modal-overlay">
+  <div class="modal">
+    <div class="modal-message">練習をキャンセルしますか？<br>記録は保存されません。</div>
+    <div class="modal-buttons">
+      <button class="modal-btn-cancel" onclick="closeCancelModal()">練習に戻る</button>
+      <button class="modal-btn-delete" onclick="confirmCancel()">中止する</button>
+    </div>
+  </div>
+</div>
 
 <!-- 確認モーダル -->
 <div class="modal-overlay" id="modal-overlay">
