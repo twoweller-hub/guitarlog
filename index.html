@@ -246,6 +246,11 @@
     }
 
     /* 曲管理タブ */
+    .add-song-fields {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
     .add-song-row {
       display: flex;
       gap: 8px;
@@ -449,9 +454,12 @@
 
     <div class="card">
       <div class="label">曲を追加</div>
-      <div class="add-song-row">
-        <input type="text" id="new-song-input" placeholder="曲名を入力（例: New Song / Artist）">
-        <button class="btn-add" onclick="addSong()">追加</button>
+      <div class="add-song-fields">
+        <input type="text" id="new-song-input" placeholder="曲名">
+        <div class="add-song-row">
+          <input type="text" id="new-artist-input" placeholder="アーティスト名">
+          <button class="btn-add" onclick="addSong()">追加</button>
+        </div>
       </div>
     </div>
 
@@ -474,7 +482,7 @@
   let timerInterval = null;
   let pendingDeleteSong = null;
   let songCounts = {};
-  let selectedSong = '';
+  let selectedSong = null;
 
   // ========== 曲管理 ==========
 
@@ -482,11 +490,11 @@
     const dropdown = document.getElementById('song-select-dropdown');
     dropdown.innerHTML = '';
     songs.forEach(song => {
-      const count = songCounts[song] !== undefined ? songCounts[song] : 0;
+      const count = songCounts[song.name] !== undefined ? songCounts[song.name] : 0;
       const item = document.createElement('div');
       item.className = 'custom-option';
-      item.innerHTML = `<span class="custom-option-name">${song}</span><span class="custom-option-count">${count}回</span>`;
-      item.onclick = () => selectSongOption(song);
+      item.innerHTML = `<span class="custom-option-name">${song.name} / ${song.artist}</span><span class="custom-option-count">${count}回</span>`;
+      item.onclick = () => selectSongOption(song.name, song.artist);
       dropdown.appendChild(item);
     });
   }
@@ -508,10 +516,10 @@
     document.getElementById('song-select-trigger').classList.remove('open');
   }
 
-  function selectSongOption(song) {
-    selectedSong = song;
+  function selectSongOption(name, artist) {
+    selectedSong = { name, artist };
     const label = document.getElementById('song-select-label');
-    label.textContent = song;
+    label.textContent = name + ' / ' + artist;
     label.classList.remove('placeholder');
     closeSongSelect();
   }
@@ -523,13 +531,13 @@
       return;
     }
     list.innerHTML = songs.map(song => {
-      const s = String(song);
-      const count = songCounts[s] !== undefined ? songCounts[s] : 0;
-      return `<div class="song-item">
+      const count = songCounts[song.name] !== undefined ? songCounts[song.name] : 0;
+      const safeName = song.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      return `<div class="song-item" data-name="${song.name.replace(/"/g, '&quot;')}" data-artist="${song.artist.replace(/"/g, '&quot;')}">
         <span class="drag-handle">☰</span>
-        <span class="song-name-text">${s}</span>
+        <span class="song-name-text">${song.name} / ${song.artist}</span>
         <span class="song-count">${count}回</span>
-        <button class="btn-delete" onclick="deleteSong('${s.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>
+        <button class="btn-delete" onclick="deleteSong('${safeName}')" title="削除">✕</button>
       </div>`;
     }).join('');
     initSortable();
@@ -585,19 +593,21 @@
   }
 
   function addSong() {
-    const input = document.getElementById('new-song-input');
-    const name = input.value.trim();
-    if (!name) return;
+    const nameInput = document.getElementById('new-song-input');
+    const artistInput = document.getElementById('new-artist-input');
+    const name = nameInput.value.trim();
+    const artist = artistInput.value.trim();
+    if (!name || !artist) return;
 
     // プルダウンに同じ曲がすでにあれば追加しない
     const dropdown = document.getElementById('song-select-dropdown');
-    if (Array.from(dropdown.querySelectorAll('.custom-option-name')).some(el => el.textContent === name)) return;
+    if (Array.from(dropdown.querySelectorAll('.custom-option-name')).some(el => el.textContent === name + ' / ' + artist)) return;
 
     // プルダウンに即座に追加
     const item = document.createElement('div');
     item.className = 'custom-option';
-    item.innerHTML = `<span class="custom-option-name">${name}</span><span class="custom-option-count">0回</span>`;
-    item.onclick = () => selectSongOption(name);
+    item.innerHTML = `<span class="custom-option-name">${name} / ${artist}</span><span class="custom-option-count">0回</span>`;
+    item.onclick = () => selectSongOption(name, artist);
     dropdown.appendChild(item);
 
     const list = document.getElementById('song-list');
@@ -606,17 +616,20 @@
     songCounts[name] = 0;
     const songItem = document.createElement('div');
     songItem.className = 'song-item';
-    songItem.innerHTML = `<span class="drag-handle">☰</span><span class="song-name-text">${name}</span><span class="song-count">0回</span><button class="btn-delete" onclick="deleteSong('${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>`;
+    songItem.dataset.name = name;
+    songItem.dataset.artist = artist;
+    songItem.innerHTML = `<span class="drag-handle">☰</span><span class="song-name-text">${name} / ${artist}</span><span class="song-count">0回</span><button class="btn-delete" onclick="deleteSong('${name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')" title="削除">✕</button>`;
     list.appendChild(songItem);
 
-    input.value = '';
+    nameInput.value = '';
+    artistInput.value = '';
 
     // GASへはバックグラウンドで送信
     fetch(GAS_URL, {
       method: 'POST',
       mode: 'no-cors',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'addSong', song: name })
+      body: JSON.stringify({ action: 'addSong', song: name, artist: artist })
     }).catch(() => {});
   }
 
@@ -627,8 +640,8 @@
         animation: 150,
         handle: '.drag-handle',
         onEnd: function() {
-          const songs = Array.from(list.querySelectorAll('.song-name-text'))
-            .map(el => el.textContent);
+          const songs = Array.from(list.querySelectorAll('.song-item'))
+            .map(el => ({ name: el.dataset.name, artist: el.dataset.artist }));
           renderSongSelect(songs);
           fetch(GAS_URL, {
             method: 'POST',
@@ -656,7 +669,7 @@
     const listEl = document.getElementById('song-list');
     const items = listEl.querySelectorAll('.song-item');
     items.forEach(item => {
-      if (item.querySelector('.song-name-text').textContent === song) item.remove();
+      if (item.dataset.name === song) item.remove();
     });
     const select = document.getElementById('song-select');
     Array.from(select.options).forEach(opt => {
@@ -707,8 +720,7 @@
   // ========== 練習 ==========
 
   function startPractice() {
-    const song = selectedSong;
-    if (!song) {
+    if (!selectedSong) {
       showStatus('曲を選択してください', 'error');
       return;
     }
@@ -720,7 +732,7 @@
     document.getElementById('btn-start').disabled = true;
     document.getElementById('start-card').style.display = 'none';
 
-    document.getElementById('practicing-song').textContent = song;
+    document.getElementById('practicing-song').textContent = selectedSong.name + ' / ' + selectedSong.artist;
     document.getElementById('start-time-label').textContent = '開始: ' + formatTime(startTime);
     document.getElementById('practicing-area').style.display = 'block';
     document.getElementById('btn-end').disabled = false;
@@ -730,7 +742,8 @@
 
   function endPractice() {
     const endTime = new Date();
-    const song = selectedSong;
+    const song = selectedSong.name;
+    const artist = selectedSong.artist;
 
     clearInterval(timerInterval);
     timerInterval = null;
@@ -742,6 +755,7 @@
     const payload = {
       date:      formatDate(startTime),
       song:      song,
+      artist:    artist,
       startTime: formatTime(startTime),
       endTime:   formatTime(endTime),
       duration:  duration
@@ -767,7 +781,7 @@
 
   function resetUI() {
     startTime = null;
-    selectedSong = '';
+    selectedSong = null;
     const label = document.getElementById('song-select-label');
     label.textContent = '曲を選択してください';
     label.classList.add('placeholder');
@@ -817,6 +831,9 @@
 
   // Enterキーで曲追加
   document.getElementById('new-song-input').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.isComposing) document.getElementById('new-artist-input').focus();
+  });
+  document.getElementById('new-artist-input').addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.isComposing) addSong();
   });
 

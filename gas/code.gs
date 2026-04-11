@@ -18,21 +18,23 @@ function doGet(e) {
   var songs = [];
   if (sheet) {
     var lastRow = sheet.getLastRow();
-    if (lastRow > 0) {
-      var data = sheet.getRange(1, 1, lastRow, 1).getValues();
-      songs = data.map(function(row) { return '' + row[0]; }).filter(function(v) { return v !== ''; });
+    if (lastRow > 1) {
+      var data = sheet.getRange(2, 1, lastRow - 1, 2).getValues();
+      songs = data
+        .filter(function(row) { return ('' + row[0]) !== ''; })
+        .map(function(row) { return { name: '' + row[0], artist: '' + row[1] }; });
     }
   }
 
-  // 各曲の通算回数（F列の最大値）を取得
+  // 各曲の通算回数（G列の最大値）を取得
   var counts = {};
-  songs.forEach(function(s) { counts[s] = 0; });
+  songs.forEach(function(s) { counts[s.name] = 0; });
   var practiceSheet = ss.getSheetByName(SHEET_NAME);
   if (practiceSheet) {
     var lastRow2 = practiceSheet.getLastRow();
     if (lastRow2 > 1) {
       var songCol = practiceSheet.getRange(2, 2, lastRow2 - 1, 1).getValues();
-      var countCol = practiceSheet.getRange(2, 6, lastRow2 - 1, 1).getValues();
+      var countCol = practiceSheet.getRange(2, 7, lastRow2 - 1, 1).getValues();
       for (var i = 0; i < songCol.length; i++) {
         var songName = '' + songCol[i][0];
         var cnt = parseFloat(countCol[i][0]);
@@ -65,7 +67,7 @@ function doPost(e) {
     var data = JSON.parse(e.postData.contents);
 
     if (data.action === 'addSong') {
-      return addSong(data.song);
+      return addSong(data.song, data.artist);
     } else if (data.action === 'deleteSong') {
       return deleteSong(data.song);
     } else if (data.action === 'reorderSongs') {
@@ -79,7 +81,8 @@ function doPost(e) {
 }
 
 /**
- * 練習記録をシート1に追記
+ * 練習記録をシートに追記
+ * A=日付 B=曲名 C=アーティスト D=開始時間 E=終了時間 F=練習時間 G=通算回数
  */
 function logPractice(data) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
@@ -89,11 +92,11 @@ function logPractice(data) {
   var lastRow = sheet.getLastRow();
   var newRow = lastRow + 1;
 
-  // 同じ曲のF列の最大値を探して+1する
+  // 同じ曲のG列の最大値を探して+1する
   var maxCount = 0;
   if (newRow > 2) {
     var songCol = sheet.getRange(2, 2, newRow - 2, 1).getValues();
-    var countCol = sheet.getRange(2, 6, newRow - 2, 1).getValues();
+    var countCol = sheet.getRange(2, 7, newRow - 2, 1).getValues();
     for (var i = 0; i < songCol.length; i++) {
       if (songCol[i][0] === data.song) {
         var cnt = parseFloat(countCol[i][0]);
@@ -104,10 +107,11 @@ function logPractice(data) {
 
   sheet.getRange(newRow, 1).setValue(data.date);
   sheet.getRange(newRow, 2).setValue(data.song);
-  sheet.getRange(newRow, 3).setValue(data.startTime);
-  sheet.getRange(newRow, 4).setValue(data.endTime);
-  sheet.getRange(newRow, 5).setValue(data.duration);
-  sheet.getRange(newRow, 6).setValue(maxCount + 1);
+  sheet.getRange(newRow, 3).setValue(data.artist);
+  sheet.getRange(newRow, 4).setValue(data.startTime);
+  sheet.getRange(newRow, 5).setValue(data.endTime);
+  sheet.getRange(newRow, 6).setValue(data.duration);
+  sheet.getRange(newRow, 7).setValue(maxCount + 1);
 
   return ContentService
     .createTextOutput(JSON.stringify({ status: 'ok', row: newRow }))
@@ -115,21 +119,23 @@ function logPractice(data) {
 }
 
 /**
- * 曲リストシートに曲名を追加
+ * 曲リストシートに曲名とアーティスト名を追加
  */
-function addSong(songName) {
+function addSong(songName, artistName) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
   var sheet = ss.getSheetByName(SONGS_SHEET_NAME);
   if (!sheet) return errorResponse('シート「' + SONGS_SHEET_NAME + '」が見つかりません');
 
   var lastRow = sheet.getLastRow();
-  if (lastRow > 0) {
-    var data = sheet.getRange(1, 1, lastRow, 1).getValues();
+  if (lastRow > 1) {
+    var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
     var exists = data.some(function(row) { return row[0] === songName; });
     if (exists) return errorResponse('その曲はすでに登録されています');
   }
 
-  sheet.getRange(lastRow + 1, 1).setValue(songName);
+  var newRow = lastRow + 1;
+  sheet.getRange(newRow, 1).setValue(songName);
+  sheet.getRange(newRow, 2).setValue(artistName);
   return ContentService
     .createTextOutput(JSON.stringify({ status: 'ok' }))
     .setMimeType(ContentService.MimeType.JSON);
@@ -144,12 +150,12 @@ function deleteSong(songName) {
   if (!sheet) return errorResponse('シート「' + SONGS_SHEET_NAME + '」が見つかりません');
 
   var lastRow = sheet.getLastRow();
-  if (lastRow === 0) return errorResponse('曲が登録されていません');
+  if (lastRow <= 1) return errorResponse('曲が登録されていません');
 
-  var data = sheet.getRange(1, 1, lastRow, 1).getValues();
+  var data = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
   for (var i = 0; i < data.length; i++) {
     if (('' + data[i][0]) === ('' + songName)) {
-      sheet.deleteRow(i + 1);
+      sheet.deleteRow(i + 2);
       return ContentService
         .createTextOutput(JSON.stringify({ status: 'ok' }))
         .setMimeType(ContentService.MimeType.JSON);
@@ -166,10 +172,15 @@ function reorderSongs(songs) {
   var sheet = ss.getSheetByName(SONGS_SHEET_NAME);
   if (!sheet) return errorResponse('曲リストシートが見つかりません');
 
-  sheet.clearContents();
+  // ヘッダー行を残してデータ行だけ削除
+  var lastRow = sheet.getLastRow();
+  if (lastRow > 1) {
+    sheet.deleteRows(2, lastRow - 1);
+  }
+
   if (songs.length > 0) {
-    var data = songs.map(function(s) { return [s]; });
-    sheet.getRange(1, 1, data.length, 1).setValues(data);
+    var data = songs.map(function(s) { return [s.name, s.artist]; });
+    sheet.getRange(2, 1, data.length, 2).setValues(data);
   }
 
   return ContentService
