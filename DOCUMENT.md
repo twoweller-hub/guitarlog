@@ -53,17 +53,27 @@ guitarlog/
 | 列 | 内容 | 例 |
 |----|------|----|
 | A  | 日付 | `2026-04-10` |
-| B  | 曲名 | `Linoleum / NOFX` |
-| C  | 開始時間 | `14:32` |
-| D  | 終了時間 | `14:47` |
-| E  | 練習時間（分） | `15` |
-| F  | 通算回数 | `12` |
+| B  | 曲名 | `Linoleum` |
+| C  | アーティスト名 | `NOFX` |
+| D  | 開始時間 | `14:32` |
+| E  | 終了時間 | `14:47` |
+| F  | 練習時間（分） | `15` |
+| G  | 通算回数 | `12` |
+
+### 曲リストシートの列構成
+
+| 列 | 内容 |
+|----|------|
+| A  | 曲名（1行目はヘッダー「曲名」） |
+| B  | アーティスト名（1行目はヘッダー「アーティスト名」） |
+
+**ヘッダー行が必要。** GAS は2行目以降をデータとして読む。
 
 ### 過去データのインポート
 
 Excel などの過去データをインポートする場合：
-- B 列の曲名をアプリの曲名と**完全一致**させること
-- F 列（通算回数）は空でも構わない。GAS が MAX+1 で自動計算する
+- B 列を曲名、C 列をアーティスト名に分けること
+- G 列（通算回数）は空でも構わない。GAS が MAX+1 で自動計算する
 
 ---
 
@@ -139,10 +149,10 @@ Excel などの過去データをインポートする場合：
 
 ```js
 // 変更前
-const CACHE = 'guitarlog-v8';
+const CACHE = 'guitarlog-v10';
 
 // 変更後（数字を +1 する）
-const CACHE = 'guitarlog-v9';
+const CACHE = 'guitarlog-v11';
 ```
 
 ### Service Worker の fetch 戦略について（他のアプリを作るときのヒント）
@@ -378,3 +388,43 @@ const URLS = [
 **解決策**: 2つ目の宣言を `const songItem` に改名した。`const` は同一スコープ内で同じ名前を再宣言できないため、エラーになる。
 
 **教訓**: JS が全く動かなくなったときは SyntaxError を疑う。ブラウザの DevTools → コンソールでエラーメッセージを確認すると原因がすぐわかる。
+
+---
+
+### 13. GAS の返り値の型変更後に古い HTML が残っていた
+
+**問題**: GAS の `doGet` を改修して曲リストを文字列配列 `["曲名"]` からオブジェクト配列 `[{name, artist}]` に変更したが、HTML の push 前に GAS だけ再デプロイしたため、古い HTML がオブジェクトを文字列として表示しようとして `[object Object]` が表示された。
+
+**解決策**: GAS と HTML は必ずセットで更新・デプロイする。GAS の返り値の型を変えた場合は HTML の push を先に（または同時に）行うこと。
+
+---
+
+### 14. 曲削除時に `<select>` 要素への参照が残っていた
+
+**問題**: `<select>` をカスタムドロップダウンに置き換えた後も、`confirmModal()` 内に `document.getElementById('song-select').options` を操作するコードが残っていた。`song-select` という id の要素がなくなったため `null` になり、削除操作が一切できなくなった。
+
+**解決策**: `select.options` の操作をカスタムドロップダウンの `.custom-option` 要素の操作に書き換えた。UI コンポーネントを変更した際は、そのコンポーネントを参照しているすべての箇所を確認すること。
+
+---
+
+### 15. CSS グリッドで2つの入力欄の幅と高さを揃える
+
+**問題**: 曲名とアーティスト名の入力欄を縦に並べ、アーティスト名の行にだけ追加ボタンを置くレイアウトで、曲名入力欄の幅とアーティスト名入力欄の幅が揃わなかった。また追加ボタンのパディングが入力欄より大きく、2行目の行高が1行目より高くなり高さも揃わなかった。
+
+**解決策**: CSS グリッドで `grid-template-columns: 1fr auto` を使い、入力欄を列1・ボタンを列2の2行目に配置。ボタンの `padding-top/bottom` を入力欄に合わせることで行高を統一した。
+
+```css
+.add-song-fields {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+}
+.add-song-fields #new-song-input   { grid-column: 1 / 2; }
+.add-song-fields #new-artist-input { grid-column: 1 / 2; }
+.add-song-fields .btn-add {
+  grid-column: 2 / 3;
+  grid-row: 2;
+  padding-top: 9px;
+  padding-bottom: 9px;
+}
+```
