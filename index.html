@@ -247,13 +247,20 @@
 
     /* 曲管理タブ */
     .add-song-fields {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: 1fr auto;
       gap: 8px;
     }
-    .add-song-row {
-      display: flex;
-      gap: 8px;
+    .add-song-fields #new-song-input {
+      grid-column: 1 / 2;
+    }
+    .add-song-fields #new-artist-input {
+      grid-column: 1 / 2;
+    }
+    .add-song-fields .btn-add {
+      grid-column: 2 / 3;
+      grid-row: 2;
+      align-self: stretch;
     }
     .add-song-row input {
       flex: 1;
@@ -456,10 +463,8 @@
       <div class="label">曲を追加</div>
       <div class="add-song-fields">
         <input type="text" id="new-song-input" placeholder="曲名">
-        <div class="add-song-row">
-          <input type="text" id="new-artist-input" placeholder="アーティスト名">
-          <button class="btn-add" onclick="addSong()">追加</button>
-        </div>
+        <input type="text" id="new-artist-input" placeholder="アーティスト名">
+        <button class="btn-add" onclick="addSong()">追加</button>
       </div>
     </div>
 
