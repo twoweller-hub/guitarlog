@@ -667,13 +667,11 @@
 
     // UIから即座に削除
     const listEl = document.getElementById('song-list');
-    const items = listEl.querySelectorAll('.song-item');
-    items.forEach(item => {
+    listEl.querySelectorAll('.song-item').forEach(item => {
       if (item.dataset.name === song) item.remove();
     });
-    const select = document.getElementById('song-select');
-    Array.from(select.options).forEach(opt => {
-      if (opt.value === song) opt.remove();
+    document.querySelectorAll('#song-select-dropdown .custom-option').forEach(opt => {
+      if (opt.querySelector('.custom-option-name').textContent.startsWith(song + ' / ')) opt.remove();
     });
     if (listEl.querySelectorAll('.song-item').length === 0) {
       listEl.innerHTML = '<div class="empty-message">曲が登録されていません</div>';
