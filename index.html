@@ -391,6 +391,18 @@
       cursor: pointer;
     }
 
+    .modal-btn-save {
+      flex: 1;
+      padding: 12px;
+      background: #1593c9;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     /* 練習キャンセルボタン */
     .btn-cancel-practice {
       display: block;
@@ -743,8 +755,26 @@
     timerInterval = setInterval(updateTimer, 1000);
   }
 
+  let pendingSaveEndTime = null;
+
   function endPractice() {
-    const endTime = new Date();
+    pendingSaveEndTime = new Date();
+    const duration = Math.round((pendingSaveEndTime - startTime) / 60000);
+    document.getElementById('save-modal-song').textContent = selectedSong.name + ' / ' + selectedSong.artist;
+    document.getElementById('save-modal-duration').textContent = duration + '分';
+    document.getElementById('save-modal-overlay').classList.add('active');
+  }
+
+  function closeSaveModal() {
+    pendingSaveEndTime = null;
+    document.getElementById('save-modal-overlay').classList.remove('active');
+  }
+
+  function confirmSave() {
+    const endTime = pendingSaveEndTime;
+    pendingSaveEndTime = null;
+    document.getElementById('save-modal-overlay').classList.remove('active');
+
     const song = selectedSong.name;
     const artist = selectedSong.artist;
 
@@ -846,6 +876,21 @@
     if (wrapper && !wrapper.contains(e.target)) closeSongSelect();
   });
 </script>
+
+<!-- 保存確認モーダル -->
+<div class="modal-overlay" id="save-modal-overlay">
+  <div class="modal">
+    <div class="modal-message">
+      練習を記録しますか？<br>
+      <span id="save-modal-song" style="font-weight:700;"></span><br>
+      <span id="save-modal-duration" style="color:#888;font-size:14px;"></span>
+    </div>
+    <div class="modal-buttons">
+      <button class="modal-btn-cancel" onclick="closeSaveModal()">練習に戻る</button>
+      <button class="modal-btn-save" onclick="confirmSave()">保存する</button>
+    </div>
+  </div>
+</div>
 
 <!-- 練習キャンセル確認モーダル -->
 <div class="modal-overlay" id="cancel-modal-overlay">

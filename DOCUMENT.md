@@ -140,7 +140,7 @@ Excel などの過去データをインポートする場合：
 
 1. `index.html` や `sw.js` などを変更
 2. `sw.js` の `CACHE` バージョンを +1 する（後述）
-3. GitHub に push → GitHub Pages に自動反映
+3. VS Code のソースコントロールでステージ → コミット → 「変更の同期」ボタンで push → GitHub Pages に自動反映
 
 ### Service Worker のキャッシュを更新する
 
@@ -202,6 +202,46 @@ swift make_icons.swift
 ```
 
 デザイン: 🎸 絵文字 + オレンジ背景（`#ee8727`）、角丸四角形
+
+---
+
+## Git / GitHub の操作（VS Code から行う）
+
+### 基本的な流れ
+
+ターミナルは不要。VS Code のソースコントロール（左サイドバーのブランチアイコン）から全操作できる。
+
+1. ファイルを変更する
+2. 変更ファイルを **ステージ**（`+` ボタン）
+3. コミットメッセージを入力して **コミット**
+4. **「変更の同期」** ボタンで GitHub に push される
+
+### 新しいプロジェクトを初めて GitHub に push する場合
+
+1. ローカルでフォルダを作成・コーディング
+2. VS Code でステージ → コミット
+3. **「Branchの発行」** ボタンをクリック
+4. Public / Private を選択 → GitHub にリポジトリが自動作成されて push 完了
+
+> GitHub のブラウザでリポジトリを事前に作る必要はない。VS Code だけで完結する。
+
+「Branchの発行」は初回のみ表示される。以降は「変更の同期」ボタンになる。
+
+### GitHub Pages で公開する場合は Public リポジトリが必要
+
+自分だけで使うアプリ（公開不要）なら Private でよい。
+このギターログアプリは PWA として `https://twoweller-hub.github.io/guitarlog/` で公開しているため Public にしている。
+
+### 既存リポジトリと VS Code を紐付ける（例外ケース）
+
+ターミナルで push し続けていてリモートが未設定の場合など、稀に必要になる：
+
+```bash
+git remote add origin https://github.com/ユーザー名/リポジトリ名.git
+```
+
+これを1回実行すれば以降は VS Code の UI で push できる。
+通常は「Branchの発行」を使えばこの手順は不要。
 
 ---
 
