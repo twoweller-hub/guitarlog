@@ -45,7 +45,7 @@ function doGet(e) {
         }
         var dateVal = dateCol[i][0];
         if (dateVal && lastDates[songName] !== undefined) {
-          var dateStr = (dateVal instanceof Date)
+          var dateStr = (typeof dateVal.getTime === 'function')
             ? Utilities.formatDate(dateVal, 'Asia/Tokyo', 'yyyy-MM-dd')
             : '' + dateVal;
           if (!lastDates[songName] || dateStr > lastDates[songName]) {
