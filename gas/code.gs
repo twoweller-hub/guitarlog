@@ -34,7 +34,7 @@ function doGet(e) {
     var lastRow2 = practiceSheet.getLastRow();
     if (lastRow2 > 1) {
       var songCol = practiceSheet.getRange(2, 2, lastRow2 - 1, 1).getValues();
-      var countCol = practiceSheet.getRange(2, 7, lastRow2 - 1, 1).getValues();
+      var countCol = practiceSheet.getRange(2, 8, lastRow2 - 1, 1).getValues();
       for (var i = 0; i < songCol.length; i++) {
         var songName = '' + songCol[i][0];
         var cnt = parseFloat(countCol[i][0]);
@@ -82,7 +82,7 @@ function doPost(e) {
 
 /**
  * 練習記録をシートに追記
- * A=日付 B=曲名 C=アーティスト D=開始時間 E=終了時間 F=練習時間 G=通算回数
+ * A=日付 B=曲名 C=アーティスト D=開始時間 E=終了時間 F=練習時間(秒) G=練習時間(◯分◯秒) H=通算回数
  */
 function logPractice(data) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
@@ -92,11 +92,11 @@ function logPractice(data) {
   var lastRow = sheet.getLastRow();
   var newRow = lastRow + 1;
 
-  // 同じ曲のG列の最大値を探して+1する
+  // 同じ曲のH列の最大値を探して+1する
   var maxCount = 0;
   if (newRow > 2) {
     var songCol = sheet.getRange(2, 2, newRow - 2, 1).getValues();
-    var countCol = sheet.getRange(2, 7, newRow - 2, 1).getValues();
+    var countCol = sheet.getRange(2, 8, newRow - 2, 1).getValues();
     for (var i = 0; i < songCol.length; i++) {
       if (songCol[i][0] === data.song) {
         var cnt = parseFloat(countCol[i][0]);
@@ -105,13 +105,17 @@ function logPractice(data) {
     }
   }
 
+  var m = Math.floor(data.duration / 60);
+  var s = data.duration % 60;
+
   sheet.getRange(newRow, 1).setValue(data.date);
   sheet.getRange(newRow, 2).setValue(data.song);
   sheet.getRange(newRow, 3).setValue(data.artist);
   sheet.getRange(newRow, 4).setValue(data.startTime);
   sheet.getRange(newRow, 5).setValue(data.endTime);
   sheet.getRange(newRow, 6).setValue(data.duration);
-  sheet.getRange(newRow, 7).setValue(maxCount + 1);
+  sheet.getRange(newRow, 7).setValue(m + '分' + s + '秒');
+  sheet.getRange(newRow, 8).setValue(maxCount + 1);
 
   return ContentService
     .createTextOutput(JSON.stringify({ status: 'ok', row: newRow }))
