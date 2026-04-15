@@ -499,7 +499,20 @@
   let timerInterval = null;
   let pendingDeleteSong = null;
   let songCounts = {};
+  let songLastDates = {};
   let selectedSong = null;
+
+  function calcDaysAgo(dateStr) {
+    if (!dateStr) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const last = new Date(dateStr);
+    last.setHours(0, 0, 0, 0);
+    const diff = Math.round((today - last) / (1000 * 60 * 60 * 24));
+    if (diff === 0) return '今日';
+    if (diff === 1) return '昨日';
+    return diff + '日前';
+  }
 
   // ========== 曲管理 ==========
 
@@ -508,9 +521,11 @@
     dropdown.innerHTML = '';
     songs.forEach(song => {
       const count = songCounts[song.name] !== undefined ? songCounts[song.name] : 0;
+      const daysAgo = calcDaysAgo(songLastDates[song.name] || null);
+      const countText = daysAgo ? daysAgo + '・' + count + '回' : count + '回';
       const item = document.createElement('div');
       item.className = 'custom-option';
-      item.innerHTML = `<span class="custom-option-name">${song.name} / ${song.artist}</span><span class="custom-option-count">${count}回</span>`;
+      item.innerHTML = `<span class="custom-option-name">${song.name} / ${song.artist}</span><span class="custom-option-count">${countText}</span>`;
       item.onclick = () => selectSongOption(song.name, song.artist);
       dropdown.appendChild(item);
     });
@@ -587,6 +602,7 @@
         if (script.parentNode) document.head.removeChild(script);
         if (data.status === 'ok') {
           songCounts = data.counts || {};
+          songLastDates = data.lastDates || {};
           renderSongSelect(data.songs);
           renderSongList(data.songs);
         }

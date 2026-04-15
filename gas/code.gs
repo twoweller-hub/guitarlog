@@ -26,13 +26,15 @@ function doGet(e) {
     }
   }
 
-  // 各曲の通算回数（G列の最大値）を取得
+  // 各曲の通算回数（H列の最大値）と最終練習日（A列の最新日付）を取得
   var counts = {};
-  songs.forEach(function(s) { counts[s.name] = 0; });
+  var lastDates = {};
+  songs.forEach(function(s) { counts[s.name] = 0; lastDates[s.name] = null; });
   var practiceSheet = ss.getSheetByName(SHEET_NAME);
   if (practiceSheet) {
     var lastRow2 = practiceSheet.getLastRow();
     if (lastRow2 > 1) {
+      var dateCol = practiceSheet.getRange(2, 1, lastRow2 - 1, 1).getValues();
       var songCol = practiceSheet.getRange(2, 2, lastRow2 - 1, 1).getValues();
       var countCol = practiceSheet.getRange(2, 8, lastRow2 - 1, 1).getValues();
       for (var i = 0; i < songCol.length; i++) {
@@ -41,11 +43,20 @@ function doGet(e) {
         if (!isNaN(cnt) && counts[songName] !== undefined && cnt > counts[songName]) {
           counts[songName] = cnt;
         }
+        var dateVal = dateCol[i][0];
+        if (dateVal && lastDates[songName] !== undefined) {
+          var dateStr = (dateVal instanceof Date)
+            ? Utilities.formatDate(dateVal, 'Asia/Tokyo', 'yyyy-MM-dd')
+            : '' + dateVal;
+          if (!lastDates[songName] || dateStr > lastDates[songName]) {
+            lastDates[songName] = dateStr;
+          }
+        }
       }
     }
   }
 
-  var result = JSON.stringify({ status: 'ok', songs: songs, counts: counts });
+  var result = JSON.stringify({ status: 'ok', songs: songs, counts: counts, lastDates: lastDates });
   var callback = e.parameter.callback;
   if (callback) {
     return ContentService.createTextOutput(callback + '(' + result + ')')
