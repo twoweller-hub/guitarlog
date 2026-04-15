@@ -69,6 +69,9 @@
 - 画像・マニフェスト → **キャッシュ優先**（変更頻度が低いため）
 - アプリを更新したときに古い HTML が使われ続ける問題を防ぐための設計
 
+## GAS コーディング上の注意
+- `getValues()` で取得した日付セルの値は GAS V8 ランタイムで `instanceof Date` が `false` になる。Date 型の判定は `typeof val.getTime === 'function'` を使うこと。
+
 ## 重要な設定値
 - スプレッドシート ID: `12pZVt7aGA5NzBeRZN_wo6cDh4ryW7aTrGZfpOTeDpEk`
 - GAS URL: `index.html` 内の `GAS_URL` 定数に記載

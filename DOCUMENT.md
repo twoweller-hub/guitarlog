@@ -464,6 +464,36 @@ const URLS = [
 
 ---
 
+### 17. GAS V8 ランタイムで `instanceof Date` が false になる
+
+**問題**: プルダウンに「何日前」を表示する機能を実装したが、4/11 と 4/13 の両方に記録がある曲で 4/11 の方が返され、「4日前」と誤表示された。4/13 のみの曲は正しく「2日前」と表示されていた。
+
+**原因**: GAS V8 ランタイムでは `getValues()` が返す日付オブジェクトが `instanceof Date` で `false` になる。そのため `'' + dateVal` に落ちて `"Mon Apr 13 2026 00:00:00 GMT+0900 (日本標準時)"` のような曜日付き文字列になっていた。この文字列を大小比較すると曜日の頭文字（M, T, W, ...）のアルファベット順で判定されるため、日付順と一致しないケースが生じた。
+
+例：
+- `"Mon Apr 13"` vs `"Sat Apr 11"` → `'M'(77) < 'S'(83)` → **FALSE → 更新されない（バグ）**
+- `"Tue Apr 14"` vs `"Sat Apr 11"` → `'T'(84) > 'S'(83)` → TRUE（偶然正しい）
+
+デバッグ方法: `doGet` に `?debug=1` パラメータを追加して各行の `dateStr` と `isDate` を出力し、`isDate: false` かつ `dateStr` が曜日付き文字列になっていることで判明した。
+
+**解決策**: `instanceof Date` の代わりに duck typing で判定する。
+
+```js
+// NG: GAS V8では false になることがある
+var dateStr = (dateVal instanceof Date)
+  ? Utilities.formatDate(dateVal, 'Asia/Tokyo', 'yyyy-MM-dd')
+  : '' + dateVal;
+
+// OK: getTime メソッドの有無で判定
+var dateStr = (typeof dateVal.getTime === 'function')
+  ? Utilities.formatDate(dateVal, 'Asia/Tokyo', 'yyyy-MM-dd')
+  : '' + dateVal;
+```
+
+**教訓**: GAS で `getValues()` から取得した日付を扱う場合は `instanceof Date` を使わず `typeof val.getTime === 'function'` で判定すること。
+
+---
+
 ### 15. CSS グリッドで2つの入力欄の幅と高さを揃える
 
 **問題**: 曲名とアーティスト名の入力欄を縦に並べ、アーティスト名の行にだけ追加ボタンを置くレイアウトで、曲名入力欄の幅とアーティスト名入力欄の幅が揃わなかった。また追加ボタンのパディングが入力欄より大きく、2行目の行高が1行目より高くなり高さも揃わなかった。
