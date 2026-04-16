@@ -81,4 +81,4 @@
 ## 重要な設定値
 - スプレッドシート ID: `12pZVt7aGA5NzBeRZN_wo6cDh4ryW7aTrGZfpOTeDpEk`
 - GAS URL: `index.html` 内の `GAS_URL` 定数に記載
-- Service Worker キャッシュバージョン: `sw.js` の `CACHE` 定数で管理（現在 v10）
+- Service Worker キャッシュバージョン: `sw.js` の `CACHE` 定数で管理（現在 v11）

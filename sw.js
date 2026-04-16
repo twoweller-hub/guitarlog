@@ -1,4 +1,4 @@
-const CACHE = 'guitarlog-v10';
+const CACHE = 'guitarlog-v11';
 const URLS = [
   '/guitarlog/',
   '/guitarlog/index.html',

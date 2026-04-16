@@ -402,6 +402,13 @@
       font-weight: 700;
       cursor: pointer;
     }
+    #session-summary-text {
+      font-size: 16px;
+      color: #1a1a2e;
+      font-weight: 600;
+      text-align: center;
+      padding: 4px 0;
+    }
     .memo-input {
       width: 100%;
       box-sizing: border-box;
@@ -480,6 +487,12 @@
       <button class="btn-cancel-practice" onclick="cancelPractice()">練習をキャンセル</button>
     </div>
 
+    <!-- 今回の練習サマリー -->
+    <div class="card" id="session-summary" style="display:none;">
+      <div class="label">今回の練習</div>
+      <div id="session-summary-text"></div>
+    </div>
+
   </div>
 
   <!-- 曲管理タブ -->
@@ -515,6 +528,8 @@
   let songCounts = {};
   let songLastDates = {};
   let selectedSong = null;
+  let sessionSongs = 0;
+  let sessionSeconds = 0;
 
   function calcDaysAgo(dateStr) {
     if (!dateStr) return null;
@@ -844,12 +859,24 @@
     })
     .then(() => {
       showStatus('✓ 保存しました（' + formatDuration(duration) + '）', 'success');
+      sessionSongs += 1;
+      sessionSeconds += duration;
+      updateSessionSummary();
       resetUI();
     })
     .catch(err => {
       showStatus('送信エラー: ' + err.message, 'error');
       document.getElementById('btn-end').disabled = false;
     });
+  }
+
+  function updateSessionSummary() {
+    const m = Math.floor(sessionSeconds / 60);
+    const s = sessionSeconds % 60;
+    const timeStr = s === 0 ? m + '分' : m + '分' + s + '秒';
+    document.getElementById('session-summary-text').textContent =
+      sessionSongs + '曲 ／ 合計 ' + timeStr;
+    document.getElementById('session-summary').style.display = 'block';
   }
 
   function resetUI() {
