@@ -93,7 +93,7 @@ function doPost(e) {
 
 /**
  * 練習記録をシートに追記
- * A=日付 B=曲名 C=アーティスト D=開始時間 E=終了時間 F=練習時間(秒) G=練習時間(◯分◯秒) H=通算回数
+ * A=日付 B=曲名 C=アーティスト D=開始時間 E=終了時間 F=練習時間(秒) G=練習時間(◯分◯秒) H=通算回数 I=メモ
  */
 function logPractice(data) {
   var ss = SpreadsheetApp.openById(SHEET_ID);
@@ -127,6 +127,7 @@ function logPractice(data) {
   sheet.getRange(newRow, 6).setValue(data.duration);
   sheet.getRange(newRow, 7).setValue(m + '分' + s + '秒');
   sheet.getRange(newRow, 8).setValue(maxCount + 1);
+  sheet.getRange(newRow, 9).setValue(data.memo || '');
 
   return ContentService
     .createTextOutput(JSON.stringify({ status: 'ok', row: newRow }))

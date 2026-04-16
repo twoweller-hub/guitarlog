@@ -402,6 +402,20 @@
       font-weight: 700;
       cursor: pointer;
     }
+    .memo-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      font-size: 14px;
+      border: 1px solid #dde1ea;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      color: #1a1a2e;
+      outline: none;
+    }
+    .memo-input:focus {
+      border-color: #1593c9;
+    }
 
     /* 練習キャンセルボタン */
     .btn-cancel-practice {
@@ -807,13 +821,17 @@
 
     const duration = Math.round((endTime - startTime) / 1000);
 
+    const memo = document.getElementById('memo-input').value;
+    document.getElementById('memo-input').value = '';
+
     const payload = {
       date:      formatDate(startTime),
       song:      song,
       artist:    artist,
       startTime: formatTime(startTime),
       endTime:   formatTime(endTime),
-      duration:  duration
+      duration:  duration,
+      memo:      memo
     };
 
     showStatus('送信中...', 'sending');
@@ -907,6 +925,7 @@
       <span id="save-modal-song" style="font-weight:700;"></span><br>
       <span id="save-modal-duration" style="color:#888;font-size:14px;"></span>
     </div>
+    <input type="text" id="memo-input" class="memo-input" placeholder="メモ（任意）">
     <div class="modal-buttons">
       <button class="modal-btn-cancel" onclick="closeSaveModal()">練習に戻る</button>
       <button class="modal-btn-save" onclick="confirmSave()">保存する</button>
