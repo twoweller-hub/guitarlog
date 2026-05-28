@@ -552,6 +552,7 @@
   let songLastDates = {};
   let selectedSong = null;
   let sessionSongs = 0;
+  let songList = [];
   let sessionSeconds = 0;
 
   function calcDaysAgo(dateStr) {
@@ -655,8 +656,9 @@
         if (data.status === 'ok') {
           songCounts = data.counts || {};
           songLastDates = data.lastDates || {};
-          renderSongSelect(data.songs);
-          renderSongList(data.songs);
+          songList = data.songs || [];
+          renderSongSelect(songList);
+          renderSongList(songList);
         }
         resolve();
       };
@@ -882,6 +884,9 @@
     })
     .then(() => {
       showStatus('✓ 保存しました（' + formatDuration(duration) + '）', 'success');
+      songCounts[song] = (songCounts[song] || 0) + 1;
+      songLastDates[song] = formatDate(startTime);
+      renderSongSelect(songList);
       sessionSongs += 1;
       sessionSeconds += duration;
       updateSessionSummary();
