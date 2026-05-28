@@ -30,6 +30,26 @@
       font-weight: 700;
       padding-bottom: 14px;
     }
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .sheet-link {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: white;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 600;
+      opacity: 0.85;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.2);
+      white-space: nowrap;
+    }
+    .sheet-link:active { opacity: 0.6; }
 
     /* タブ */
     .tabs { display: flex; gap: 4px; }
@@ -443,7 +463,10 @@
 <body>
 
 <header>
-  <h1>🎸 ギター練習記録</h1>
+  <div class="header-top">
+    <h1>🎸 ギター練習記録</h1>
+    <a class="sheet-link" href="https://docs.google.com/spreadsheets/d/12pZVt7aGA5NzBeRZN_wo6cDh4ryW7aTrGZfpOTeDpEk/edit?gid=0#gid=0" target="_blank" rel="noopener">📊 Sheet</a>
+  </div>
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab('practice')">練習</button>
     <button class="tab-btn" onclick="switchTab('songs')">曲管理</button>
