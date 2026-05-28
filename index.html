@@ -458,6 +458,39 @@
       margin-top: 4px;
     }
     .btn-cancel-practice:active { color: #888; }
+
+    /* Obsidianコピーカード */
+    .obsidian-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .btn-copy {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      background: #ee8727;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-copy:active { opacity: 0.7; }
+    .obsidian-preview {
+      background: #f8f8f8;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #333;
+      white-space: pre-wrap;
+      font-family: monospace;
+    }
   </style>
 </head>
 <body>
@@ -516,6 +549,15 @@
       <div id="session-summary-text"></div>
     </div>
 
+    <!-- Obsidianコピーカード -->
+    <div class="card" id="obsidian-card" style="display:none;">
+      <div class="obsidian-card-header">
+        <div class="label" style="margin-bottom:0;">Obsidian用</div>
+        <button class="btn-copy" id="btn-copy" onclick="copyObsidianText()">📋 コピー</button>
+      </div>
+      <div class="obsidian-preview" id="obsidian-preview"></div>
+    </div>
+
   </div>
 
   <!-- 曲管理タブ -->
@@ -554,6 +596,7 @@
   let sessionSongs = 0;
   let songList = [];
   let sessionSeconds = 0;
+  let sessionLog = [];
 
   function calcDaysAgo(dateStr) {
     if (!dateStr) return null;
@@ -887,9 +930,11 @@
       songCounts[song] = (songCounts[song] || 0) + 1;
       songLastDates[song] = formatDate(startTime);
       renderSongSelect(songList);
+      sessionLog.push({ song, artist, duration });
       sessionSongs += 1;
       sessionSeconds += duration;
       updateSessionSummary();
+      updateObsidianCard();
       resetUI();
     })
     .catch(err => {
@@ -905,6 +950,31 @@
     document.getElementById('session-summary-text').textContent =
       sessionSongs + '曲 ／ 合計 ' + timeStr;
     document.getElementById('session-summary').style.display = 'block';
+  }
+
+  function buildObsidianText() {
+    const lines = ['### ギター練習記録'];
+    sessionLog.forEach(entry => {
+      lines.push('- ' + entry.song + '（' + entry.artist + '）：' + formatDuration(entry.duration));
+    });
+    const m = Math.floor(sessionSeconds / 60);
+    const s = sessionSeconds % 60;
+    const timeStr = s === 0 ? m + '分' : m + '分' + s + '秒';
+    lines.push(sessionSongs + '曲／合計 ' + timeStr);
+    return lines.join('\n');
+  }
+
+  function updateObsidianCard() {
+    document.getElementById('obsidian-preview').textContent = buildObsidianText();
+    document.getElementById('obsidian-card').style.display = 'block';
+  }
+
+  function copyObsidianText() {
+    navigator.clipboard.writeText(buildObsidianText()).then(() => {
+      const btn = document.getElementById('btn-copy');
+      btn.textContent = '✓ コピーしました';
+      setTimeout(() => { btn.innerHTML = '📋 コピー'; }, 2000);
+    });
   }
 
   function resetUI() {
