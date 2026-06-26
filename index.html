@@ -934,7 +934,7 @@
       songCounts[song] = (songCounts[song] || 0) + 1;
       songLastDates[song] = formatDate(startTime);
       renderSongSelect(songList);
-      sessionLog.push({ song, artist, duration });
+      sessionLog.push({ song, artist, duration, memo });
       sessionSongs += 1;
       sessionSeconds += duration;
       updateSessionSummary();
@@ -960,6 +960,7 @@
     const lines = ['### ギター練習記録'];
     sessionLog.forEach(entry => {
       lines.push('- ' + entry.song + '（' + entry.artist + '）：' + formatDuration(entry.duration));
+      if (entry.memo) lines.push('\t- ' + entry.memo);
     });
     const m = Math.floor(sessionSeconds / 60);
     const s = sessionSeconds % 60;
